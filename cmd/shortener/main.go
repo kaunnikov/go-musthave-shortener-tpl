@@ -56,14 +56,13 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fullUrl, ok := urlList[d]
-	if !ok {
-		http.Error(w, "Url not found!", http.StatusMethodNotAllowed)
+	if fullUrl, ok := urlList[d]; ok {
+		w.Header().Add("Location", fullUrl)
+		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	}
 
-	w.Header().Add("Location", fullUrl)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	http.Error(w, "Url not found!", http.StatusMethodNotAllowed)
 }
 
 func main() {
