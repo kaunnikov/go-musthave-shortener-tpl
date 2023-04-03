@@ -43,11 +43,11 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		}
 		url := string(responseData)
 
-		shortUrl := randSeq(10)
-		urlList[shortUrl] = url
+		short := randSeq(10)
+		urlList[short] = url
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("http://" + r.Host + "/" + shortUrl))
+		w.Write([]byte("http://" + r.Host + "/" + short))
 		return
 	}
 
@@ -56,8 +56,8 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if fullUrl, ok := urlList[d]; ok {
-		w.Header().Add("Location", fullUrl)
+	if full, ok := urlList[d]; ok {
+		w.Header().Add("Location", full)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	}
