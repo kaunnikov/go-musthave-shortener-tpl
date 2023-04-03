@@ -29,11 +29,11 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 
 	if d == "" {
 		if r.Method != http.MethodPost {
-			http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
+			http.Error(w, "Only POST requests are allowed!", http.StatusBadRequest)
 			return
 		}
 		if r.Header.Get("Content-Type") != "text/plain" {
-			http.Error(w, "Invalid Content-Type!", http.StatusConflict)
+			http.Error(w, "Invalid Content-Type: "+r.Header.Get("Content-Type"), http.StatusBadRequest)
 			return
 		}
 
@@ -52,7 +52,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Method != http.MethodGet {
-		http.Error(w, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
+		http.Error(w, "Only GET requests are allowed!", http.StatusBadRequest)
 		return
 	}
 
@@ -62,7 +62,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Error(w, "Url not found!", http.StatusMethodNotAllowed)
+	http.Error(w, "Url not found!", http.StatusBadRequest)
 }
 
 func main() {
