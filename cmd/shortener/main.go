@@ -47,7 +47,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		urlList[shortUrl] = url
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte("http://localhost:8080/" + shortUrl))
+		w.Write([]byte("http://" + r.Host + "/" + shortUrl))
 		return
 	}
 
