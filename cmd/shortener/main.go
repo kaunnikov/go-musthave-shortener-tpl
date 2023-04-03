@@ -33,7 +33,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if r.Header.Get("Content-Type") != "text/plain" {
-			http.Error(w, "Invalid Content-Type!", http.StatusBadRequest)
+			http.Error(w, "Invalid Content-Type!", http.StatusConflict)
 			return
 		}
 
