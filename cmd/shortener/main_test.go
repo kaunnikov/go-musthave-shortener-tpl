@@ -61,7 +61,7 @@ func Test_mainHandle(t *testing.T) {
 			mainHandle(w, request)
 			res := w.Result()
 			assert.Equal(t, res.StatusCode, tt.want.statusCode)
-
+			defer res.Body.Close()
 		})
 	}
 }
