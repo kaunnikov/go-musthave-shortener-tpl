@@ -32,14 +32,11 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Only POST requests are allowed!", http.StatusBadRequest)
 			return
 		}
-		if r.Header.Get("Content-Type") != "text/plain" {
-			http.Error(w, "Invalid Content-Type: "+r.Header.Get("Content-Type"), http.StatusBadRequest)
-			return
-		}
 
 		responseData, err := io.ReadAll(r.Body)
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, "Invalid POST body!", http.StatusBadRequest)
+			return
 		}
 		url := string(responseData)
 
