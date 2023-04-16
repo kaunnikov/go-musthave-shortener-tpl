@@ -8,16 +8,18 @@ type AppConfig struct {
 }
 
 func ParseFlags() *AppConfig {
-	appConfig := new(AppConfig)
+	appConfig := AppConfig{Prefix: ""}
 
 	flag.StringVar(&appConfig.Host, "a", ":8080", "Default Host:port")
 	flag.Func("b", "App prefix", func(s string) error {
+
 		if s != "" {
 			appConfig.Prefix = "/" + s
 		}
+
 		return nil
 	})
 
 	flag.Parse()
-	return appConfig
+	return &appConfig
 }

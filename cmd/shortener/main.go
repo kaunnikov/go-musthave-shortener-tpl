@@ -41,7 +41,12 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 
-	_, errWrite := w.Write([]byte("http://" + r.Host + prefix + "/" + short))
+	lastChar := string(prefix[len(prefix)-1])
+	if lastChar != "/" {
+		prefix += "/"
+	}
+
+	_, errWrite := w.Write([]byte("http://" + r.Host + prefix + short))
 	if errWrite != nil {
 		panic(errWrite)
 	}
@@ -62,9 +67,13 @@ func shortHandle(w http.ResponseWriter, r *http.Request) {
 func main() {
 	appConfig := config.ParseFlags()
 	prefix = appConfig.Prefix
+	defaultRoute := "/"
+	if prefix != "" {
+		defaultRoute = prefix
+	}
 
 	r := chi.NewRouter()
-	r.Route(prefix+"/", func(r chi.Router) {
+	r.Route(defaultRoute, func(r chi.Router) {
 		r.Post("/", mainHandle)
 		r.Get("/{id}", shortHandle)
 	})
