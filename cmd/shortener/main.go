@@ -80,6 +80,11 @@ func shortHandle(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Url not found!", http.StatusBadRequest)
 }
 
+func shorterHandle(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+}
+
 func parseFlags() *AppConfig {
 	appConfig := AppConfig{Prefix: ""}
 
@@ -118,6 +123,7 @@ func main() {
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", mainHandle)
 		r.Get(defaultRoute+"{id}", shortHandle)
+		r.Post("/api/shorten", shorterHandle)
 	})
 	fmt.Println("Running server on", appConfig.Host)
 	log.Fatal(http.ListenAndServe(appConfig.Host, r))
