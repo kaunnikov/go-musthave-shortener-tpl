@@ -41,12 +41,18 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 
-	lastChar := string(prefix[len(prefix)-1])
-	if lastChar != "/" {
-		prefix += "/"
+	urlPrefix := prefix
+	if len(urlPrefix) > 1 {
+		lastChar := string(urlPrefix[len(urlPrefix)-1])
+		if lastChar != "/" {
+			urlPrefix += "/"
+		}
+	}
+	if urlPrefix == "" {
+		urlPrefix = "/"
 	}
 
-	_, errWrite := w.Write([]byte("http://" + r.Host + prefix + short))
+	_, errWrite := w.Write([]byte("http://" + r.Host + urlPrefix + short))
 	if errWrite != nil {
 		panic(errWrite)
 	}
@@ -71,6 +77,9 @@ func main() {
 	if prefix != "" {
 		defaultRoute = prefix
 	}
+
+	log.Println("Default route: ", defaultRoute)
+	log.Println("Prefix: ", prefix)
 
 	r := chi.NewRouter()
 	r.Route(defaultRoute, func(r chi.Router) {

@@ -13,7 +13,7 @@ func ParseFlags() *AppConfig {
 	flag.StringVar(&appConfig.Host, "a", ":8080", "Default Host:port")
 	flag.Func("b", "App prefix", func(s string) error {
 
-		if s != "" {
+		if s != "" && s != "/" {
 			appConfig.Prefix = "/" + s
 		}
 
