@@ -46,7 +46,6 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 	if errWrite != nil {
 		panic(errWrite)
 	}
-	return
 }
 
 func shortHandle(w http.ResponseWriter, r *http.Request) {
