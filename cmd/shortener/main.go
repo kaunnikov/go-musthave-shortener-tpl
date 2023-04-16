@@ -42,7 +42,10 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 	urlList[short] = url
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("http://" + r.Host + "/" + short))
+	_, errWrite := w.Write([]byte("http://" + r.Host + "/" + short))
+	if errWrite != nil {
+		panic(errWrite)
+	}
 	return
 }
 
