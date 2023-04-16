@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"io"
-	"kaunnikov/go-musthave-shortener-tpl/cmd/config"
 	"log"
 	"math/rand"
 	"net/http"
@@ -14,6 +14,11 @@ import (
 var urlList = make(map[string]string, 1000)
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 var prefix string
+
+type AppConfig struct {
+	Host   string
+	Prefix string
+}
 
 type Message struct {
 	Name string
@@ -75,12 +80,33 @@ func shortHandle(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Url not found!", http.StatusBadRequest)
 }
 
+func parseFlags() *AppConfig {
+	appConfig := AppConfig{Prefix: ""}
+
+	flag.StringVar(&appConfig.Host, "a", ":8080", "Default Host:port")
+	flag.Func("b", "App prefix", func(s string) error {
+
+		if string(s[0]) == "/" {
+			s = s[1:]
+		}
+
+		if s != "" {
+			appConfig.Prefix = "/" + s
+		}
+
+		return nil
+	})
+
+	flag.Parse()
+	return &appConfig
+}
+
 func main() {
 	m := Message{"Hello"}
 	b, _ := json.Marshal(m)
 	fmt.Println(b)
 
-	appConfig := config.ParseFlags()
+	appConfig := parseFlags()
 	prefix = appConfig.Prefix
 	defaultRoute := "/"
 	if prefix != "" {
