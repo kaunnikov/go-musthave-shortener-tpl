@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"io"
@@ -13,6 +14,10 @@ import (
 var urlList = make(map[string]string, 1000)
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 var prefix string
+
+type Message struct {
+	Name string
+}
 
 func randSeq(n int) string {
 	b := make([]rune, n)
@@ -71,6 +76,10 @@ func shortHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	m := Message{"Hello"}
+	b, _ := json.Marshal(m)
+	fmt.Println(b)
+
 	appConfig := config.ParseFlags()
 	prefix = appConfig.Prefix
 	defaultRoute := "/"
