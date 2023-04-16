@@ -110,13 +110,14 @@ func main() {
 	prefix = appConfig.Prefix
 	defaultRoute := "/"
 	if prefix != "" {
-		defaultRoute = prefix
+		defaultRoute = prefix + "/"
 	}
+	log.Println("Prefix: " + defaultRoute)
 
 	r := chi.NewRouter()
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", mainHandle)
-		r.Get(defaultRoute+"/{id}", shortHandle)
+		r.Get(defaultRoute+"{id}", shortHandle)
 	})
 	fmt.Println("Running server on", appConfig.Host)
 	log.Fatal(http.ListenAndServe(appConfig.Host, r))
