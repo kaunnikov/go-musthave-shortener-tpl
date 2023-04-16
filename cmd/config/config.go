@@ -1,6 +1,8 @@
 package config
 
-import "flag"
+import (
+	"flag"
+)
 
 type AppConfig struct {
 	Host   string
@@ -13,7 +15,11 @@ func ParseFlags() *AppConfig {
 	flag.StringVar(&appConfig.Host, "a", ":8080", "Default Host:port")
 	flag.Func("b", "App prefix", func(s string) error {
 
-		if s != "" && s != "/" {
+		if string(s[0]) == "/" {
+			s = s[1:]
+		}
+
+		if s != "" {
 			appConfig.Prefix = "/" + s
 		}
 
