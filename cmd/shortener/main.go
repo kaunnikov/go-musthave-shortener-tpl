@@ -1,20 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/cmd/config"
 	"log"
 	"math/rand"
 	"net/http"
-	"time"
 )
 
 var urlList = make(map[string]string, 1000)
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
+var prefix string
 
 func randSeq(n int) string {
 	b := make([]rune, n)
@@ -42,7 +40,8 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 	urlList[short] = url
 
 	w.WriteHeader(http.StatusCreated)
-	_, errWrite := w.Write([]byte("http://" + r.Host + "/" + short))
+
+	_, errWrite := w.Write([]byte("http://" + r.Host + prefix + "/" + short))
 	if errWrite != nil {
 		panic(errWrite)
 	}
@@ -61,10 +60,14 @@ func shortHandle(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	appConfig := config.ParseFlags()
+	prefix = appConfig.Prefix
+
 	r := chi.NewRouter()
-	r.Route("/", func(r chi.Router) {
+	r.Route(prefix+"/", func(r chi.Router) {
 		r.Post("/", mainHandle)
 		r.Get("/{id}", shortHandle)
 	})
-	log.Fatal(http.ListenAndServe("localhost:8080", r))
+	fmt.Println("Running server on", appConfig.Host)
+	log.Fatal(http.ListenAndServe(appConfig.Host, r))
 }
