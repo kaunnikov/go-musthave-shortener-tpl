@@ -114,9 +114,9 @@ func main() {
 	}
 
 	r := chi.NewRouter()
-	r.Route(defaultRoute, func(r chi.Router) {
+	r.Route("/", func(r chi.Router) {
 		r.Post("/", mainHandle)
-		r.Get("/{id}", shortHandle)
+		r.Get(defaultRoute+"/{id}", shortHandle)
 	})
 	fmt.Println("Running server on", appConfig.Host)
 	log.Fatal(http.ListenAndServe(appConfig.Host, r))
