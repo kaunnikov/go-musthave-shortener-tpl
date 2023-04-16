@@ -78,9 +78,6 @@ func main() {
 		defaultRoute = prefix
 	}
 
-	log.Println("Default route: ", defaultRoute)
-	log.Println("Prefix: ", prefix)
-
 	r := chi.NewRouter()
 	r.Route(defaultRoute, func(r chi.Router) {
 		r.Post("/", mainHandle)
