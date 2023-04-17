@@ -32,6 +32,10 @@ type jsonStruct struct {
 	URL string `json:"URL"`
 }
 
+type shortenResponse struct {
+	Result string `json:"result"`
+}
+
 func jsonHandle(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		http.Error(w, "Invalid Content Type!", http.StatusBadRequest)
@@ -66,8 +70,8 @@ func jsonHandle(w http.ResponseWriter, r *http.Request) {
 		urlPrefix = "/"
 	}
 
-	shortRes := jsonStruct{
-		URL: "http://" + r.Host + urlPrefix + short,
+	shortRes := shortenResponse{
+		Result: "http://" + r.Host + urlPrefix + short,
 	}
 
 	resp, err := json.Marshal(shortRes)
