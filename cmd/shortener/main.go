@@ -2,23 +2,19 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/config"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 )
 
 var urlList = make(map[string]string, 1000)
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 var prefix string
-
-type AppConfig struct {
-	Host   string
-	Prefix string
-}
 
 func randSeq(n int) string {
 	b := make([]rune, n)
@@ -128,30 +124,17 @@ func shortHandle(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Url not found!", http.StatusBadRequest)
 }
 
-func parseFlags() *AppConfig {
-	appConfig := AppConfig{Prefix: ""}
-
-	flag.StringVar(&appConfig.Host, "a", ":8080", "Default Host:port")
-	flag.Func("b", "App prefix", func(s string) error {
-
-		if string(s[0]) == "/" {
-			s = s[1:]
-		}
-
-		if s != "" {
-			appConfig.Prefix = "/" + s
-		}
-
-		return nil
-	})
-
-	flag.Parse()
-	return &appConfig
-}
-
 func main() {
+	appConfig := config.ParseFlags()
 
-	appConfig := parseFlags()
+	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
+		appConfig.Host = envRunAddr
+	}
+
+	if envBaseUrl := os.Getenv("BASE_URL"); envBaseUrl != "" {
+		appConfig.Prefix = envBaseUrl
+	}
+
 	prefix = appConfig.Prefix
 	defaultRoute := "/"
 	if prefix != "" {
