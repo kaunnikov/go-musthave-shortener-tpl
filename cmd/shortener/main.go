@@ -20,10 +20,6 @@ type AppConfig struct {
 	Prefix string
 }
 
-type Message struct {
-	Name string
-}
-
 func randSeq(n int) string {
 	b := make([]rune, n)
 	for i := range b {
@@ -32,12 +28,60 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func mainHandle(w http.ResponseWriter, r *http.Request) {
+type jsonStruct struct {
+	URL string `json:"URL"`
+}
 
-	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST requests are allowed!", http.StatusBadRequest)
+func jsonHandle(w http.ResponseWriter, r *http.Request) {
+	if r.Header.Get("Content-Type") != "application/json" {
+		http.Error(w, "Invalid Content Type!", http.StatusBadRequest)
 		return
 	}
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Invalid POST body!", http.StatusBadRequest)
+		return
+	}
+
+	var t jsonStruct
+	err = json.Unmarshal(body, &t)
+	if err != nil {
+		panic(err)
+	}
+
+	short := randSeq(10)
+	urlList[short] = t.URL
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	urlPrefix := prefix
+	if len(urlPrefix) > 1 {
+		lastChar := string(urlPrefix[len(urlPrefix)-1])
+		if lastChar != "/" {
+			urlPrefix += "/"
+		}
+	}
+	if urlPrefix == "" {
+		urlPrefix = "/"
+	}
+
+	shortRes := jsonStruct{
+		URL: "http://" + r.Host + urlPrefix + short,
+	}
+
+	resp, err := json.Marshal(shortRes)
+	if err != nil {
+		panic(err)
+	}
+
+	_, errWrite := w.Write(resp)
+	if errWrite != nil {
+		panic(errWrite)
+	}
+}
+
+func mainHandle(w http.ResponseWriter, r *http.Request) {
 
 	responseData, err := io.ReadAll(r.Body)
 	if err != nil || string(responseData) == "" {
@@ -80,11 +124,6 @@ func shortHandle(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Url not found!", http.StatusBadRequest)
 }
 
-func shorterHandle(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-}
-
 func parseFlags() *AppConfig {
 	appConfig := AppConfig{Prefix: ""}
 
@@ -107,9 +146,6 @@ func parseFlags() *AppConfig {
 }
 
 func main() {
-	m := Message{"Hello"}
-	b, _ := json.Marshal(m)
-	fmt.Println(b)
 
 	appConfig := parseFlags()
 	prefix = appConfig.Prefix
@@ -123,7 +159,7 @@ func main() {
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", mainHandle)
 		r.Get(defaultRoute+"{id}", shortHandle)
-		r.Post("/api/shorten", shorterHandle)
+		r.Post("/api/shorten", jsonHandle)
 	})
 	fmt.Println("Running server on", appConfig.Host)
 	log.Fatal(http.ListenAndServe(appConfig.Host, r))
