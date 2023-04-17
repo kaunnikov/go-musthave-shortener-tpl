@@ -131,8 +131,8 @@ func main() {
 		appConfig.Host = envRunAddr
 	}
 
-	if envBaseUrl := os.Getenv("BASE_URL"); envBaseUrl != "" {
-		appConfig.Prefix = envBaseUrl
+	if envBaseURL := os.Getenv("BASE_URL"); envBaseURL != "" {
+		appConfig.Prefix = envBaseURL
 	}
 
 	prefix = appConfig.Prefix
