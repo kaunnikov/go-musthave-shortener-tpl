@@ -36,7 +36,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 
 func TestRouter(t *testing.T) {
 	fullURL = "https://yandex.ru"
-	r := Router()
+	r := NewRouter()
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 	statusCode, body := testRequest(t, ts, "POST", "/")

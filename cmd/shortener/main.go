@@ -104,7 +104,7 @@ func shortHandle(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Url not found!", http.StatusBadRequest)
 }
 
-func Router() chi.Router {
+func NewRouter() chi.Router {
 	appConfig := config.ParseFlags()
 
 	envRunAddr := os.Getenv("SERVER_ADDRESS")
@@ -138,6 +138,7 @@ func Router() chi.Router {
 }
 
 func main() {
+	router := NewRouter()
 	fmt.Println("Running server on", cfg.Host)
-	log.Fatal(http.ListenAndServe(cfg.Host, Router()))
+	log.Fatal(http.ListenAndServe(cfg.Host, router))
 }
