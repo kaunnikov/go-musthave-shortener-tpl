@@ -11,7 +11,7 @@ func ParseFlags() *AppConfig {
 	appConfig := new(AppConfig)
 
 	flag.StringVar(&appConfig.Host, "a", "localhost:8080", "Default Host:port")
-	flag.StringVar(&appConfig.Host, "b", "http://localhost:8080", "Default result URL")
+	flag.StringVar(&appConfig.ResultURL, "b", "http://localhost:8080", "Default result URL")
 	flag.Parse()
 	return appConfig
 }
