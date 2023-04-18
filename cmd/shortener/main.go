@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var urlList = make(map[string]string, 1000)
@@ -127,11 +128,15 @@ func shortHandle(w http.ResponseWriter, r *http.Request) {
 func main() {
 	appConfig := config.ParseFlags()
 
-	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
+	envRunAddr := os.Getenv("SERVER_ADDRESS")
+	envRunAddr = strings.TrimSpace(envRunAddr)
+	if envRunAddr != "" {
 		appConfig.Host = envRunAddr
 	}
 
-	if envBaseURL := os.Getenv("BASE_URL"); envBaseURL != "" {
+	envBaseURL := os.Getenv("BASE_URL")
+	envBaseURL = strings.TrimSpace(envBaseURL)
+	if envBaseURL != "" {
 		appConfig.Prefix = envBaseURL
 	}
 
