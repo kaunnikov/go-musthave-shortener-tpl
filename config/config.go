@@ -3,27 +3,15 @@ package config
 import "flag"
 
 type AppConfig struct {
-	Host   string
-	Prefix string
+	Host      string
+	ResultURL string
 }
 
 func ParseFlags() *AppConfig {
-	appConfig := AppConfig{Prefix: ""}
+	appConfig := new(AppConfig)
 
-	flag.StringVar(&appConfig.Host, "a", ":8080", "Default Host:port")
-	flag.Func("b", "App prefix", func(s string) error {
-
-		if string(s[0]) == "/" {
-			s = s[1:]
-		}
-
-		if s != "" {
-			appConfig.Prefix = "/" + s
-		}
-
-		return nil
-	})
-
+	flag.StringVar(&appConfig.Host, "a", "localhost:8080", "Default Host:port")
+	flag.StringVar(&appConfig.Host, "b", "http://localhost:8080", "Default result URL")
 	flag.Parse()
-	return &appConfig
+	return appConfig
 }

@@ -16,6 +16,7 @@ import (
 var urlList = make(map[string]string, 1000)
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 var prefix string
+var cfg *config.AppConfig
 
 func randSeq(n int) string {
 	b := make([]rune, n)
@@ -96,18 +97,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 
-	urlPrefix := prefix
-	if len(urlPrefix) > 1 {
-		lastChar := string(urlPrefix[len(urlPrefix)-1])
-		if lastChar != "/" {
-			urlPrefix += "/"
-		}
-	}
-	if urlPrefix == "" {
-		urlPrefix = "/"
-	}
-
-	_, errWrite := w.Write([]byte("http://" + r.Host + urlPrefix + short))
+	_, errWrite := w.Write([]byte(cfg.ResultURL + "/" + short))
 	if errWrite != nil {
 		panic(errWrite)
 	}
@@ -137,22 +127,17 @@ func main() {
 	envBaseURL := os.Getenv("BASE_URL")
 	envBaseURL = strings.TrimSpace(envBaseURL)
 	if envBaseURL != "" {
-		appConfig.Prefix = envBaseURL
+		appConfig.ResultURL = envBaseURL
 	}
+	cfg = appConfig
 
-	prefix = appConfig.Prefix
-	defaultRoute := "/"
-	if prefix != "" {
-		defaultRoute = prefix + "/"
-	}
-	log.Println("Prefix: " + defaultRoute)
-
+	log.Println(cfg)
 	r := chi.NewRouter()
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", mainHandle)
-		r.Get(defaultRoute+"{id}", shortHandle)
+		r.Get("/{id}", shortHandle)
 		r.Post("/api/shorten", jsonHandle)
 	})
-	fmt.Println("Running server on", appConfig.Host)
-	log.Fatal(http.ListenAndServe(appConfig.Host, r))
+	fmt.Println("Running server on", cfg.Host)
+	log.Fatal(http.ListenAndServe(cfg.Host, r))
 }
