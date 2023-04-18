@@ -16,7 +16,6 @@ import (
 
 var urlList = make(map[string]string, 1000)
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-var prefix string
 var cfg *config.AppConfig
 
 func randSeq(n int) string {
@@ -58,19 +57,8 @@ func jsonHandle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
-	urlPrefix := prefix
-	if len(urlPrefix) > 1 {
-		lastChar := string(urlPrefix[len(urlPrefix)-1])
-		if lastChar != "/" {
-			urlPrefix += "/"
-		}
-	}
-	if urlPrefix == "" {
-		urlPrefix = "/"
-	}
-
 	shortRes := shortenResponse{
-		Result: "http://" + r.Host + urlPrefix + short,
+		Result: cfg.ResultURL + "/" + short,
 	}
 
 	resp, err := json.Marshal(shortRes)
@@ -92,7 +80,6 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url := string(responseData)
-	log.Println("Полученный из POST url: " + url)
 
 	short := randSeq(10)
 	urlList[short] = url
@@ -107,11 +94,8 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 
 func shortHandle(w http.ResponseWriter, r *http.Request) {
 	d := chi.URLParam(r, "id")
-	log.Println(d)
 
 	if full, ok := urlList[d]; ok {
-		log.Println(full)
-
 		w.Header().Add("Location", full)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
@@ -136,13 +120,12 @@ func main() {
 	}
 	cfg = appConfig
 	re := regexp.MustCompile(`:\d{2,}/(\w+)`)
-	fmt.Printf("%q\n", re.FindSubmatch([]byte(cfg.ResultURL)))
+
 	pattertResultURL := "/"
 	if len(re.FindSubmatch([]byte(cfg.ResultURL))) == 2 {
 		pattertResultURL = "/" + string(re.FindSubmatch([]byte(cfg.ResultURL))[1])
 	}
 
-	log.Println(cfg)
 	r := chi.NewRouter()
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", mainHandle)
