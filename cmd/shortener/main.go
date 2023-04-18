@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -91,6 +92,7 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url := string(responseData)
+	log.Println("Полученный из POST url: " + url)
 
 	short := randSeq(10)
 	urlList[short] = url
@@ -105,8 +107,11 @@ func mainHandle(w http.ResponseWriter, r *http.Request) {
 
 func shortHandle(w http.ResponseWriter, r *http.Request) {
 	d := chi.URLParam(r, "id")
+	log.Println(d)
 
 	if full, ok := urlList[d]; ok {
+		log.Println(full)
+
 		w.Header().Add("Location", full)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
@@ -130,12 +135,20 @@ func main() {
 		appConfig.ResultURL = envBaseURL
 	}
 	cfg = appConfig
+	re := regexp.MustCompile(`:\d{2,}/(\w+)`)
+	fmt.Printf("%q\n", re.FindSubmatch([]byte(cfg.ResultURL)))
+	pattertResultURL := "/"
+	if len(re.FindSubmatch([]byte(cfg.ResultURL))) == 2 {
+		pattertResultURL = "/" + string(re.FindSubmatch([]byte(cfg.ResultURL))[1])
+	}
 
 	log.Println(cfg)
 	r := chi.NewRouter()
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", mainHandle)
-		r.Get("/{id}", shortHandle)
+		r.Route(pattertResultURL, func(r chi.Router) {
+			r.Get("/{id}", shortHandle)
+		})
 		r.Post("/api/shorten", jsonHandle)
 	})
 	fmt.Println("Running server on", cfg.Host)
