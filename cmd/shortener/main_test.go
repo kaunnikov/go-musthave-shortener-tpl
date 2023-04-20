@@ -1,9 +1,12 @@
 package main
 
 import (
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/config"
+	"kaunnikov/go-musthave-shortener-tpl/internal/app"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -26,7 +29,6 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 		defer resp.Body.Close()
 		return resp.StatusCode, string(respBody)
 	} else {
-		t.Log(resp)
 		respBody := resp.Header.Get("Location")
 		require.NoError(t, err)
 		defer resp.Body.Close()
@@ -36,7 +38,18 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 
 func TestRouter(t *testing.T) {
 	fullURL = "https://yandex.ru"
-	r := NewRouter()
+
+	cfg := &config.AppConfig{Host: ":8080", ResultURL: ":8080"}
+
+	loadFromENV(cfg)
+
+	newApp := app.NewApp(cfg)
+
+	r := chi.NewRouter()
+	r.Post("/", newApp.CreateHandler)
+	r.Get("/{id}", newApp.ShortHandler)
+	r.Post("/api/shorten", newApp.JSONHandler)
+
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 	statusCode, body := testRequest(t, ts, "POST", "/")

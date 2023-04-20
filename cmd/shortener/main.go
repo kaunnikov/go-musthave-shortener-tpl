@@ -1,144 +1,54 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	"flag"
 	"github.com/go-chi/chi/v5"
-	"io"
 	"kaunnikov/go-musthave-shortener-tpl/config"
+	"kaunnikov/go-musthave-shortener-tpl/internal/app"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"regexp"
 	"strings"
 )
 
-var urlList = make(map[string]string, 1000)
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-var cfg *config.AppConfig
+func main() {
+	cfg := &config.AppConfig{}
 
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+	flag.StringVar(&cfg.Host, "a", "localhost:8080", "Default Host:port")
+	flag.StringVar(&cfg.ResultURL, "b", "http://localhost:8080", "Default result URL")
+	flag.Parse()
+
+	loadFromENV(cfg)
+
+	newApp := app.NewApp(cfg)
+
+	re := regexp.MustCompile(`:\d{2,}/(\w+)`)
+	patternResultURL := "/"
+	if len(re.FindSubmatch([]byte(cfg.ResultURL))) == 2 {
+		patternResultURL = "/" + string(re.FindSubmatch([]byte(cfg.ResultURL))[1])
 	}
-	return string(b)
+
+	r := chi.NewRouter()
+	r.Post("/", newApp.CreateHandler)
+	r.Get(patternResultURL+"/{id}", newApp.ShortHandler)
+	r.Post("/api/shorten", newApp.JSONHandler)
+
+	log.Println("Running server on", cfg.Host)
+	log.Fatal(http.ListenAndServe(cfg.Host, r))
 }
 
-type jsonStruct struct {
-	URL string `json:"URL"`
-}
-
-type shortenResponse struct {
-	Result string `json:"result"`
-}
-
-func jsonHandle(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Content-Type") != "application/json" {
-		http.Error(w, "Invalid Content Type!", http.StatusBadRequest)
-		return
-	}
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "Invalid POST body!", http.StatusBadRequest)
-		return
-	}
-
-	var t jsonStruct
-	err = json.Unmarshal(body, &t)
-	if err != nil {
-		panic(err)
-	}
-
-	short := randSeq(10)
-	urlList[short] = t.URL
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-
-	shortRes := shortenResponse{
-		Result: cfg.ResultURL + "/" + short,
-	}
-
-	resp, err := json.Marshal(shortRes)
-	if err != nil {
-		panic(err)
-	}
-
-	_, errWrite := w.Write(resp)
-	if errWrite != nil {
-		panic(errWrite)
-	}
-}
-
-func mainHandle(w http.ResponseWriter, r *http.Request) {
-
-	responseData, err := io.ReadAll(r.Body)
-	if err != nil || string(responseData) == "" {
-		http.Error(w, "Invalid POST body!", http.StatusBadRequest)
-		return
-	}
-	url := string(responseData)
-
-	short := randSeq(10)
-	urlList[short] = url
-
-	w.WriteHeader(http.StatusCreated)
-
-	_, errWrite := w.Write([]byte(cfg.ResultURL + "/" + short))
-	if errWrite != nil {
-		panic(errWrite)
-	}
-}
-
-func shortHandle(w http.ResponseWriter, r *http.Request) {
-	d := chi.URLParam(r, "id")
-
-	if full, ok := urlList[d]; ok {
-		w.Header().Add("Location", full)
-		w.WriteHeader(http.StatusTemporaryRedirect)
-		return
-	}
-
-	http.Error(w, "Url not found!", http.StatusBadRequest)
-}
-
-func NewRouter() chi.Router {
-	appConfig := config.ParseFlags()
-
+func loadFromENV(cfg *config.AppConfig) {
 	envRunAddr := os.Getenv("SERVER_ADDRESS")
 	envRunAddr = strings.TrimSpace(envRunAddr)
 	if envRunAddr != "" {
-		appConfig.Host = envRunAddr
+		cfg.Host = envRunAddr
 	}
 
 	envBaseURL := os.Getenv("BASE_URL")
 	envBaseURL = strings.TrimSpace(envBaseURL)
 	if envBaseURL != "" {
-		appConfig.ResultURL = envBaseURL
-	}
-	cfg = appConfig
-	re := regexp.MustCompile(`:\d{2,}/(\w+)`)
-
-	pattertResultURL := "/"
-	if len(re.FindSubmatch([]byte(cfg.ResultURL))) == 2 {
-		pattertResultURL = "/" + string(re.FindSubmatch([]byte(cfg.ResultURL))[1])
+		cfg.ResultURL = envBaseURL
 	}
 
-	r := chi.NewRouter()
-	r.Route("/", func(r chi.Router) {
-		r.Post("/", mainHandle)
-		r.Route(pattertResultURL, func(r chi.Router) {
-			r.Get("/{id}", shortHandle)
-		})
-		r.Post("/api/shorten", jsonHandle)
-	})
-	return r
-}
-
-func main() {
-	router := NewRouter()
-	fmt.Println("Running server on", cfg.Host)
-	log.Fatal(http.ListenAndServe(cfg.Host, router))
 }
