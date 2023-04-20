@@ -31,7 +31,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Post("/", newApp.CreateHandler)
-	r.Get(patternResultURL+"/{id}", newApp.ShortHandler)
+	r.Get(patternResultURL+"{id}", newApp.ShortHandler)
 	r.Post("/api/shorten", newApp.JSONHandler)
 
 	log.Println("Running server on", cfg.Host)
