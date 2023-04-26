@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
 	"kaunnikov/go-musthave-shortener-tpl/config"
 	"kaunnikov/go-musthave-shortener-tpl/internal/app"
 	"log"
@@ -18,10 +18,18 @@ func main() {
 	loadFromArgs(cfg)
 	loadFromENV(cfg)
 
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		log.Fatalf("logger don't Run! %s", err)
+	}
+
+	app.Sugar = logger.Sugar()
+
 	newApp := app.NewApp(cfg)
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	r.Use(app.CustomMiddlewareLogger)
+
 	r.Post("/", newApp.CreateHandler)
 	r.Get("/{id}", newApp.ShortHandler)
 	r.Post("/api/shorten", newApp.JSONHandler)
