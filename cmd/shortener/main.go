@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"kaunnikov/go-musthave-shortener-tpl/config"
 	"kaunnikov/go-musthave-shortener-tpl/internal/app"
 	"log"
@@ -20,6 +21,7 @@ func main() {
 	newApp := app.NewApp(cfg)
 
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 	r.Post("/", newApp.CreateHandler)
 	r.Get("/{id}", newApp.ShortHandler)
 	r.Post("/api/shorten", newApp.JSONHandler)
