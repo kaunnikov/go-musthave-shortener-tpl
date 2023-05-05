@@ -35,7 +35,7 @@ func CustomCompression(h http.Handler) http.Handler {
 		}
 
 		// Если условия для сжатия не выполнены - отдаём ответ
-		if r.Method != http.MethodGet && (!isNeedCompression || !isGoodContentType) {
+		if r.Method == http.MethodGet || !isNeedCompression || !isGoodContentType {
 			h.ServeHTTP(w, r)
 			return
 		}
