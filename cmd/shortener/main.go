@@ -29,6 +29,7 @@ func main() {
 
 	r := chi.NewRouter()
 	r.Use(app.CustomMiddlewareLogger)
+	r.Use(app.CustomCompression)
 
 	r.Post("/", newApp.CreateHandler)
 	r.Get("/{id}", newApp.ShortHandler)
