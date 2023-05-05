@@ -30,16 +30,17 @@ func CustomCompression(h http.Handler) http.Handler {
 		for _, c := range successCompressionContentType {
 			if contentType == c {
 				isGoodContentType = true
+				break
 			}
 		}
 
 		// Если условия для сжатия не выполнены - отдаём ответ
-		if !isNeedCompression || !isGoodContentType {
+		if r.Method != http.MethodGet && (!isNeedCompression || !isGoodContentType) {
 			h.ServeHTTP(w, r)
 			return
 		}
 
-		// создаём gzip.Writer поверх текущего w
+		w.Header().Set("Content-Encoding", "gzip")
 		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
 		if err != nil {
 			Sugar.Errorf("Error gzip compression: %s", err)
@@ -52,7 +53,6 @@ func CustomCompression(h http.Handler) http.Handler {
 			}
 		}(gz)
 
-		w.Header().Set("Content-Encoding", "gzip")
 		h.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
 	})
 }
