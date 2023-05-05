@@ -34,8 +34,24 @@ func CustomCompression(h http.Handler) http.Handler {
 			}
 		}
 
+		// Проверяем нужно ли раскодировать данные, которые прислал клиент
+		if r.Header.Get(`Content-Encoding`) == "gzip" {
+			gz, err := gzip.NewReader(r.Body)
+			if err != nil {
+				Sugar.Errorf("Error NewReader(body): %s", err)
+				return
+			}
+			r.Body = gz
+			defer func(gz *gzip.Reader) {
+				err := gz.Close()
+				if err != nil {
+					Sugar.Errorf("Error gz.Close: %s", err)
+				}
+			}(gz)
+		}
+
 		// Если условия для сжатия не выполнены - отдаём ответ
-		if r.Method == http.MethodGet || !isNeedCompression || !isGoodContentType {
+		if !isNeedCompression || !isGoodContentType {
 			h.ServeHTTP(w, r)
 			return
 		}
