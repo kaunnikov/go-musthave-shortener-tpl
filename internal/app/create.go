@@ -21,7 +21,7 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	url := string(responseData)
 
 	short := randSeq(10)
-	s := StorageItem{URL: url, ShortUrl: short}
+	s := StorageItem{URL: url, ShortURL: short}
 	URLStorageSync.Lock()
 	err = m.SaveURLInStorage(&s)
 	if err != nil {

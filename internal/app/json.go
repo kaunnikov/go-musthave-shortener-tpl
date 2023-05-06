@@ -27,7 +27,7 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	short := randSeq(10)
-	s := StorageItem{URL: t.URL, ShortUrl: short}
+	s := StorageItem{URL: t.URL, ShortURL: short}
 	URLStorageSync.Lock()
 	err = m.SaveURLInStorage(&s)
 	if err != nil {

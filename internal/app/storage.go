@@ -9,7 +9,7 @@ import (
 
 type StorageItem struct {
 	URL      string `json:"full"`
-	ShortUrl string `json:"short"`
+	ShortURL string `json:"short"`
 }
 
 var URLStorageSync = sync.Mutex{}
@@ -45,7 +45,7 @@ func (m *app) GetShortURLFromStorage(shortURL string) string {
 			Sugar.Errorf("storage don't open to read! Error: %s. Path: %s", err, m.cfg.FileStoragePath)
 		}
 
-		if item.ShortUrl == shortURL {
+		if item.ShortURL == shortURL {
 			return item.URL
 		}
 		s, e = readLine(r)
