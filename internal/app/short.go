@@ -9,7 +9,7 @@ func (m *app) ShortHandler(w http.ResponseWriter, r *http.Request) {
 	d := chi.URLParam(r, "id")
 
 	URLStorageSync.Lock()
-	full := m.GetShortURLFromStorage(d)
+	full := m.GetFullURLFromStorage(d)
 	URLStorageSync.Unlock()
 
 	if full != "" {
