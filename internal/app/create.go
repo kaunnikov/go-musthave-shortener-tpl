@@ -21,9 +21,15 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	url := string(responseData)
 
 	short := randSeq(10)
-	URLMapSync.Lock()
-	URLMap[short] = url
-	URLMapSync.Unlock()
+	s := StorageItem{URL: url, ShortUrl: short}
+	URLStorageSync.Lock()
+	err = m.SaveURLInStorage(&s)
+	if err != nil {
+		Sugar.Errorf("error write data: %s", err)
+		http.Error(w, "Error in server!", http.StatusBadRequest)
+		return
+	}
+	URLStorageSync.Unlock()
 
 	w.WriteHeader(http.StatusCreated)
 

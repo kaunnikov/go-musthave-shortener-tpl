@@ -8,11 +8,11 @@ import (
 func (m *app) ShortHandler(w http.ResponseWriter, r *http.Request) {
 	d := chi.URLParam(r, "id")
 
-	URLMapSync.Lock()
-	full, ok := URLMap[d]
-	URLMapSync.Unlock()
+	URLStorageSync.Lock()
+	full := m.GetShortURLFromStorage(d)
+	URLStorageSync.Unlock()
 
-	if ok {
+	if full != "" {
 		w.Header().Add("Location", full)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		return

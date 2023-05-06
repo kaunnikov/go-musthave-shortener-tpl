@@ -42,19 +42,23 @@ func main() {
 func loadFromArgs(cfg *config.AppConfig) {
 	flag.StringVar(&cfg.Host, "a", "localhost:8080", "Default Host:port")
 	flag.StringVar(&cfg.ResultURL, "b", "http://localhost:8080", "Default result URL")
+	flag.StringVar(&cfg.FileStoragePath, "f", "/tmp/short-url-db.json", "Default File Storage Path")
 	flag.Parse()
 }
 
 func loadFromENV(cfg *config.AppConfig) {
-	envRunAddr := os.Getenv("SERVER_ADDRESS")
-	envRunAddr = strings.TrimSpace(envRunAddr)
+	envRunAddr := strings.TrimSpace(os.Getenv("SERVER_ADDRESS"))
 	if envRunAddr != "" {
 		cfg.Host = envRunAddr
 	}
 
-	envBaseURL := os.Getenv("BASE_URL")
-	envBaseURL = strings.TrimSpace(envBaseURL)
+	envBaseURL := strings.TrimSpace(os.Getenv("BASE_URL"))
 	if envBaseURL != "" {
 		cfg.ResultURL = envBaseURL
+	}
+
+	fileStorageFile := strings.TrimSpace(os.Getenv("FILE_STORAGE_PATH"))
+	if fileStorageFile != "" {
+		cfg.FileStoragePath = fileStorageFile
 	}
 }
