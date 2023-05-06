@@ -25,6 +25,9 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 	require.NoError(t, err)
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	if err != nil {
+		log.Println(err)
+	}
 	if method == http.MethodPost {
 		respBody, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
