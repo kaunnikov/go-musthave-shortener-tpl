@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"os"
-	"sync"
 )
 
 type StorageItem struct {
@@ -12,7 +11,7 @@ type StorageItem struct {
 	ShortURL string `json:"short"`
 }
 
-var URLStorageSync = sync.Mutex{}
+//var URLStorageSync = sync.Mutex{}
 
 func (m *app) SaveURLInStorage(item *StorageItem) (string, error) {
 	// Проверим, есть ли уже такая ссылка

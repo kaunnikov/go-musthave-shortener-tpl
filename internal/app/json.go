@@ -28,14 +28,14 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 
 	short := randSeq(10)
 	s := StorageItem{URL: t.URL, ShortURL: short}
-	URLStorageSync.Lock()
+	//URLStorageSync.Lock()
 	short, err = m.SaveURLInStorage(&s)
 	if err != nil {
 		Sugar.Errorf("error write data: %s", err)
 		http.Error(w, "Error in server!", http.StatusBadRequest)
 		return
 	}
-	URLStorageSync.Unlock()
+	//URLStorageSync.Unlock()
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
