@@ -20,8 +20,11 @@ var fullURL string
 var shortURL string
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, string) {
+	t.Log(fullURL)
+	t.Log(ts.URL + path)
 	body := strings.NewReader(fullURL)
 	req, err := http.NewRequest(method, ts.URL+path, body)
+
 	require.NoError(t, err)
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
