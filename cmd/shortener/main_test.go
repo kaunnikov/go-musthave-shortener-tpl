@@ -39,7 +39,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 func TestRouter(t *testing.T) {
 	fullURL = "https://yandex.ru"
 
-	cfg := &config.AppConfig{Host: ":8080", ResultURL: ":8080"}
+	cfg := &config.AppConfig{Host: ":8080", ResultURL: ":8080", FileStoragePath: "/tmp/short-url-db.json"}
 
 	loadFromENV(cfg)
 
