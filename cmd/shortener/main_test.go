@@ -4,9 +4,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"io"
 	"kaunnikov/go-musthave-shortener-tpl/config"
 	"kaunnikov/go-musthave-shortener-tpl/internal/app"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -42,6 +44,12 @@ func TestRouter(t *testing.T) {
 	cfg := &config.AppConfig{Host: ":8080", ResultURL: ":8080", FileStoragePath: "/tmp/short-url-db.json"}
 
 	loadFromENV(cfg)
+
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		log.Fatalf("logger don't Run! %s", err)
+	}
+	app.Sugar = logger.Sugar()
 
 	newApp := app.NewApp(cfg)
 
