@@ -26,7 +26,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	if err != nil {
-		log.Println(err)
+		t.Log(err)
 	}
 	if method == http.MethodPost {
 		respBody, err := io.ReadAll(resp.Body)
@@ -64,11 +64,12 @@ func TestRouter(t *testing.T) {
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 	statusCode, body := testRequest(t, ts, "POST", "/")
-
+	t.Log(body)
 	pat := regexp.MustCompile(`:\d{2,}/(\w+)`)
 	if len(pat.FindSubmatch([]byte(body))) == 2 {
 		shortURL = "/" + string(pat.FindSubmatch([]byte(body))[1])
 	}
+	t.Log(shortURL)
 
 	assert.Equal(t, http.StatusCreated, statusCode)
 	statusCode, _ = testRequest(t, ts, "GET", shortURL)
