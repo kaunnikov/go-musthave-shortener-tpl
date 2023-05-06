@@ -1,13 +1,14 @@
 package app
 
-import "math/rand"
-
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+import (
+	"fmt"
+	"math/rand"
+)
 
 func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		panic(err)
 	}
-	return string(b)
+	return fmt.Sprintf("%X", b)
 }

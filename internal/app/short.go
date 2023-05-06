@@ -8,9 +8,9 @@ import (
 func (m *app) ShortHandler(w http.ResponseWriter, r *http.Request) {
 	d := chi.URLParam(r, "id")
 
-	//URLStorageSync.Lock()
+	URLStorageSync.Lock()
 	full := m.GetFullURLFromStorage(d)
-	//URLStorageSync.Unlock()
+	URLStorageSync.Unlock()
 
 	if full != "" {
 		w.Header().Add("Location", full)
