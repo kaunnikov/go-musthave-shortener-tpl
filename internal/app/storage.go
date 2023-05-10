@@ -16,8 +16,8 @@ var URLStorageSync = sync.Mutex{}
 
 func (m *app) SaveURLInStorage(item *StorageItem) (string, error) {
 	// Проверим, есть ли уже такая ссылка
-	if shortUrl := m.getShortURLFromStorage(item.URL); shortUrl != "" {
-		return shortUrl, nil
+	if shortURL := m.getShortURLFromStorage(item.URL); shortURL != "" {
+		return shortURL, nil
 	}
 	file, err := os.OpenFile(m.cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
