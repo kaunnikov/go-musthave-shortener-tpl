@@ -16,7 +16,7 @@ var URLStorageSync = sync.Mutex{}
 
 func (m *app) SaveURLInStorage(item *StorageItem) (string, error) {
 	// Проверим, есть ли уже такая ссылка
-	if shortUrl := m.getShortUrlFromStorage(item.URL); shortUrl != "" {
+	if shortUrl := m.getShortURLFromStorage(item.URL); shortUrl != "" {
 		return shortUrl, nil
 	}
 	file, err := os.OpenFile(m.cfg.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
@@ -56,7 +56,7 @@ func (m *app) GetFullURLFromStorage(shortURL string) string {
 	}
 	return ""
 }
-func (m *app) getShortUrlFromStorage(fullURL string) string {
+func (m *app) getShortURLFromStorage(fullURL string) string {
 	file, err := os.OpenFile(m.cfg.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		Sugar.Errorf("storage don't open to read! Error: %s. Path: %s", err, m.cfg.FileStoragePath)
