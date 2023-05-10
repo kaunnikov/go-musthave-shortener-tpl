@@ -1,14 +1,17 @@
 package app
 
 import (
-	"fmt"
 	"math/rand"
+	"time"
 )
 
-func randSeq(n int) string {
-	b := make([]byte, n)
-	if _, err := rand.Read(b); err != nil {
-		panic(err)
+func randSeq(letters int) string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	alphabet := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+
+	b := make([]rune, letters)
+	for i := range b {
+		b[i] = alphabet[rand.Intn(len(alphabet))]
 	}
-	return fmt.Sprintf("%X", b)
+	return string(b)
 }
