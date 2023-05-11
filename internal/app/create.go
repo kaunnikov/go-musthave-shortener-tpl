@@ -35,5 +35,4 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logging.Fatalf("cannot write response to the client: %s", err)
 	}
-	return
 }
