@@ -1,11 +1,11 @@
-package app
+package utils
 
 import (
 	"math/rand"
 	"time"
 )
 
-func randSeq(letters int) string {
+func RandSeq(letters int) string {
 	rand.Seed(time.Now().UTC().UnixNano())
 	alphabet := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 

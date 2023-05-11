@@ -4,38 +4,38 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage/fs"
 	"net/http"
 )
 
 func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "application/json" {
+		logging.Errorf("Invalid Content Type: %s", r.Header.Get("Content-Type"))
 		http.Error(w, "Invalid Content Type!", http.StatusBadRequest)
 		return
 	}
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		logging.Errorf("cannot read request body: %s", err)
 		http.Error(w, fmt.Sprintf("cannot read request body: %s", err), http.StatusBadRequest)
 		return
 	}
 
-	var t jsonStruct
+	var t requestMessage
 	err = json.Unmarshal(body, &t)
 	if err != nil {
+		logging.Errorf("cannot decode request body to `JSON`: %s", err)
 		http.Error(w, fmt.Sprintf("cannot decode request body to `JSON`: %s", err), http.StatusBadRequest)
 		return
 	}
 
-	short := randSeq(5)
-	s := StorageItem{URL: t.URL, ShortURL: short}
-	URLStorageSync.Lock()
-	short, err = m.SaveURLInStorage(&s)
+	short, err := fs.SaveURLInStorage(t.URL)
 	if err != nil {
-		Sugar.Errorf("error write data: %s", err)
+		logging.Errorf("error write data: %s", err)
 		http.Error(w, "Error in server!", http.StatusBadRequest)
 		return
 	}
-	URLStorageSync.Unlock()
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -46,11 +46,12 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := json.Marshal(shortRes)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("cannot encode responce: %s", err), http.StatusBadRequest)
+		logging.Errorf("cannot encode response: %s", err)
+		http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
 	}
 
 	_, err = w.Write(resp)
 	if err != nil {
-		log.Fatalf("cannot write response to the client: %s", err)
+		logging.Fatalf("cannot write response to the client: %s", err)
 	}
 }

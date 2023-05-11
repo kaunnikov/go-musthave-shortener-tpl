@@ -1,8 +1,9 @@
-package app
+package compression
 
 import (
 	"compress/gzip"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"net/http"
 	"strings"
 )
@@ -38,14 +39,14 @@ func CustomCompression(h http.Handler) http.Handler {
 		if r.Header.Get(`Content-Encoding`) == "gzip" {
 			gz, err := gzip.NewReader(r.Body)
 			if err != nil {
-				Sugar.Errorf("Error NewReader(body): %s", err)
+				logging.Errorf("Error NewReader(body): %s", err)
 				return
 			}
 			r.Body = gz
 			defer func(gz *gzip.Reader) {
 				err := gz.Close()
 				if err != nil {
-					Sugar.Errorf("Error gz.Close: %s", err)
+					logging.Errorf("Error gz.Close: %s", err)
 				}
 			}(gz)
 		}
@@ -59,13 +60,13 @@ func CustomCompression(h http.Handler) http.Handler {
 		w.Header().Set("Content-Encoding", "gzip")
 		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
 		if err != nil {
-			Sugar.Errorf("Error gzip compression: %s", err)
+			logging.Errorf("Error gzip compression: %s", err)
 			return
 		}
 		defer func(gz *gzip.Writer) {
 			err := gz.Close()
 			if err != nil {
-				Sugar.Errorf("Error gz close: %s", err)
+				logging.Errorf("Error gz close: %s", err)
 			}
 		}(gz)
 
