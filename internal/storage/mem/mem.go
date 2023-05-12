@@ -11,26 +11,26 @@ var (
 
 func Append(fullURL string, shortURL string) {
 	URLStorageSync.Lock()
-	URLMap[fullURL] = shortURL
-	URLStorageSync.Unlock()
-}
+	defer URLStorageSync.Unlock()
 
-func GetByFull(fullURL string) string {
-	URLStorageSync.Lock()
-	res := URLMap[fullURL]
-	URLStorageSync.Unlock()
-	return res
+	URLMap[shortURL] = fullURL
 }
 
 func GetByShort(shortURL string) string {
 	URLStorageSync.Lock()
-	var res string
-	for f, s := range URLMap {
-		if s == shortURL {
-			res = f
-			break
+	defer URLStorageSync.Unlock()
+
+	return URLMap[shortURL]
+}
+
+func GetByFull(fullURL string) string {
+	URLStorageSync.Lock()
+	defer URLStorageSync.Unlock()
+
+	for s, f := range URLMap {
+		if f == fullURL {
+			return s
 		}
 	}
-	URLStorageSync.Unlock()
-	return res
+	return ""
 }

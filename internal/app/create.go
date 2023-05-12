@@ -20,9 +20,8 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Empty POST request body!", http.StatusBadRequest)
 		return
 	}
-	url := string(responseData)
 
-	short, err := fs.SaveURLInStorage(url)
+	short, err := fs.SaveURLInStorage(string(responseData))
 	if err != nil {
 		logging.Errorf("error write data: %s", err)
 		http.Error(w, "Error in server!", http.StatusBadRequest)

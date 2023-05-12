@@ -92,7 +92,7 @@ func getShortURLFromStorage(fullURL string) string {
 	for e == nil {
 		err = json.Unmarshal([]byte(s), &item)
 		if err != nil {
-			logging.Errorf("storage don't open to read! Error: %s. Path: %s", err, conf.FileStoragePath)
+			logging.Errorf("Cannot decode urls: %s", err)
 		}
 
 		if item.URL == fullURL {
