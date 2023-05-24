@@ -36,4 +36,5 @@ func (m *app) registerRouetes() {
 	m.Post("/", m.CreateHandler)
 	m.Get("/{id}", m.ShortHandler)
 	m.Post("/api/shorten", m.JSONHandler)
+	m.Get("/ping", m.PingHandler)
 }
