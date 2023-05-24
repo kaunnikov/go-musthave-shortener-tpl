@@ -1,15 +1,18 @@
 package app
 
 import (
-	"kaunnikov/go-musthave-shortener-tpl/config"
-	"sync"
+	"github.com/go-chi/chi/v5"
+	"kaunnikov/go-musthave-shortener-tpl/internal/compression"
+	"kaunnikov/go-musthave-shortener-tpl/internal/config"
+	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 )
 
 type app struct {
+	*chi.Mux
 	cfg *config.AppConfig
 }
 
-type jsonStruct struct {
+type requestMessage struct {
 	URL string `json:"URL"`
 }
 
@@ -17,9 +20,20 @@ type shortenResponse struct {
 	Result string `json:"result"`
 }
 
-var URLMap = make(map[string]string, 1000)
-var URLMapSync = sync.Mutex{}
-
 func NewApp(cfg *config.AppConfig) *app {
-	return &app{cfg: cfg}
+	a := &app{
+		chi.NewRouter(),
+		cfg,
+	}
+	a.registerRouetes()
+	return a
+}
+
+func (m *app) registerRouetes() {
+	m.Use(logging.CustomMiddlewareLogger)
+	m.Use(compression.CustomCompression)
+
+	m.Post("/", m.CreateHandler)
+	m.Get("/{id}", m.ShortHandler)
+	m.Post("/api/shorten", m.JSONHandler)
 }

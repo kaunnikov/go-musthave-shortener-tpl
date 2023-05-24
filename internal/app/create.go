@@ -3,32 +3,35 @@ package app
 import (
 	"fmt"
 	"io"
-	"log"
+	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage/fs"
 	"net/http"
 )
 
 func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
-
 	responseData, err := io.ReadAll(r.Body)
 	if err != nil {
+		logging.Errorf("cannot read request body: %s", err)
 		http.Error(w, fmt.Sprintf("cannot read request body: %s", err), http.StatusBadRequest)
 		return
 	}
 	if string(responseData) == "" {
+		logging.Errorf("Empty POST request body! %s", r.URL)
 		http.Error(w, "Empty POST request body!", http.StatusBadRequest)
 		return
 	}
-	url := string(responseData)
 
-	short := randSeq(10)
-	URLMapSync.Lock()
-	URLMap[short] = url
-	URLMapSync.Unlock()
+	short, err := fs.SaveURLInStorage(string(responseData))
+	if err != nil {
+		logging.Errorf("error write data: %s", err)
+		http.Error(w, "Error in server!", http.StatusBadRequest)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 
 	_, err = w.Write([]byte(m.cfg.ResultURL + "/" + short))
 	if err != nil {
-		log.Fatalf("cannot write response to the client: %s", err)
+		logging.Fatalf("cannot write response to the client: %s", err)
 	}
 }

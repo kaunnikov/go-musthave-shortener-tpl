@@ -1,12 +1,14 @@
-package main
+package app_test
 
 import (
-	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
-	"kaunnikov/go-musthave-shortener-tpl/config"
 	"kaunnikov/go-musthave-shortener-tpl/internal/app"
+	"kaunnikov/go-musthave-shortener-tpl/internal/config"
+	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage/fs"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -21,8 +23,10 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 	body := strings.NewReader(fullURL)
 	req, err := http.NewRequest(method, ts.URL+path, body)
 	require.NoError(t, err)
+
 	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
+
 	if method == http.MethodPost {
 		respBody, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
@@ -39,27 +43,27 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 func TestRouter(t *testing.T) {
 	fullURL = "https://yandex.ru"
 
-	cfg := &config.AppConfig{Host: ":8080", ResultURL: ":8080"}
+	cfg := config.LoadConfig()
+	cfg.FileStoragePath = "/tmp/short-url-bd.json"
 
-	loadFromENV(cfg)
+	if err := logging.Init(); err != nil {
+		log.Fatalf("logger don't Run!: %s", err)
+	}
 
+	fs.Init(cfg)
 	newApp := app.NewApp(cfg)
 
-	r := chi.NewRouter()
-	r.Post("/", newApp.CreateHandler)
-	r.Get("/{id}", newApp.ShortHandler)
-	r.Post("/api/shorten", newApp.JSONHandler)
-
-	ts := httptest.NewServer(r)
+	ts := httptest.NewServer(newApp)
 	defer ts.Close()
+
 	statusCode, body := testRequest(t, ts, "POST", "/")
+	assert.Equal(t, http.StatusCreated, statusCode)
 
 	pat := regexp.MustCompile(`:\d{2,}/(\w+)`)
 	if len(pat.FindSubmatch([]byte(body))) == 2 {
 		shortURL = "/" + string(pat.FindSubmatch([]byte(body))[1])
 	}
 
-	assert.Equal(t, http.StatusCreated, statusCode)
 	statusCode, _ = testRequest(t, ts, "GET", shortURL)
 
 	assert.Equal(t, http.StatusOK, statusCode)
