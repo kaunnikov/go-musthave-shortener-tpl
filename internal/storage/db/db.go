@@ -82,7 +82,7 @@ func GetOrSave(fullURL string, short string) (string, error) {
 	if shortFromDB != "" {
 		return "", &DoubleError{
 			ShortURL: shortFromDB,
-			Err:      fmt.Errorf("Double for %s", fullURL),
+			Err:      fmt.Errorf("double for %s", fullURL),
 		}
 	}
 
