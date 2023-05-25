@@ -2,10 +2,12 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage/db"
 	"kaunnikov/go-musthave-shortener-tpl/internal/utils"
 	"net/http"
 )
@@ -32,6 +34,16 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	short, err := storage.SaveURLInStorage(t.URL, utils.RandSeq(5))
+	// Если нашли запись в БД, то отдадим с нужным статусом
+	var doubleErr *db.DoubleError
+	if errors.As(err, &doubleErr) {
+		w.WriteHeader(http.StatusConflict)
+		_, err = w.Write([]byte(m.cfg.ResultURL + "/" + doubleErr.ShortURL))
+		if err != nil {
+			logging.Fatalf("cannot write response to the client: %s", err)
+		}
+		return
+	}
 
 	if err != nil {
 		logging.Errorf("error write data: %s", err)

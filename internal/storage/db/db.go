@@ -10,6 +10,16 @@ import (
 var tableName = "url_storage"
 var conf *config.AppConfig
 
+type DoubleError struct {
+	ShortURL string
+	Err      error
+}
+
+// Error добавляет поддержку интерфейса error для типа LabelError.
+func (d *DoubleError) Error() string {
+	return fmt.Sprintf("[%s] %v", d.ShortURL, d.Err)
+}
+
 func Init(cfg *config.AppConfig) {
 	conf = cfg
 	checkTables()
@@ -70,7 +80,10 @@ func GetOrSave(fullURL string, short string) (string, error) {
 
 	// Если нашли - отдаём
 	if shortFromDB != "" {
-		return shortFromDB, nil
+		return "", &DoubleError{
+			ShortURL: shortFromDB,
+			Err:      fmt.Errorf("Double for %s", fullURL),
+		}
 	}
 
 	// Если не нашли - создаём
