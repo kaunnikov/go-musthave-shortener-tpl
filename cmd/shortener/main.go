@@ -18,7 +18,10 @@ func main() {
 	}
 
 	fs.Init(cfg)
-	db.Init(cfg)
+	if cfg.DatabaseDSN != "" {
+		// "host=localhost port=5433 user=postgres password=password dbname=postgres sslmode=disable"
+		db.Init(cfg)
+	}
 	newApp := app.NewApp(cfg)
 
 	logging.Infof("Running server on %s", cfg.Host)

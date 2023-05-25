@@ -11,7 +11,7 @@ func (m *app) PingHandler(w http.ResponseWriter, r *http.Request) {
 	err := db.Ping()
 
 	if err != nil {
-		logging.Errorf("DB don't open: %s", err)
+		logging.Errorf("Ping fail: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 
