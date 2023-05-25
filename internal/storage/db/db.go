@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"database/sql"
 	"kaunnikov/go-musthave-shortener-tpl/internal/config"
 )
@@ -12,18 +11,17 @@ func Init(cfg *config.AppConfig) {
 	conf = cfg
 }
 
-func Ping(ctx context.Context) error {
+func Ping() error {
 	db, err := sql.Open("pgx", conf.DatabaseDSN)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	_, err = db.QueryContext(ctx, "SELECT * FROM information_schema.tables")
+	err = db.Ping()
 	if err != nil {
 		return err
 	}
 
 	return nil
-
 }
