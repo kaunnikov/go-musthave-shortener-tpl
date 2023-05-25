@@ -4,6 +4,7 @@ import (
 	"kaunnikov/go-musthave-shortener-tpl/internal/app"
 	"kaunnikov/go-musthave-shortener-tpl/internal/config"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage/db"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage/fs"
 	"log"
 	"net/http"
@@ -17,6 +18,7 @@ func main() {
 	}
 
 	fs.Init(cfg)
+	db.Init(cfg)
 	newApp := app.NewApp(cfg)
 
 	logging.Infof("Running server on %s", cfg.Host)
