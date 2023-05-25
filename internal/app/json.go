@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"io"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
-	"kaunnikov/go-musthave-shortener-tpl/internal/storage/fs"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
+	"kaunnikov/go-musthave-shortener-tpl/internal/utils"
 	"net/http"
 )
 
@@ -30,7 +31,8 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := fs.SaveURLInStorage(t.URL)
+	short, err := storage.SaveURLInStorage(t.URL, utils.RandSeq(5))
+
 	if err != nil {
 		logging.Errorf("error write data: %s", err)
 		http.Error(w, "Error in server!", http.StatusBadRequest)

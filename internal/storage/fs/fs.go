@@ -22,7 +22,7 @@ func Init(cfg *config.AppConfig) {
 	conf = cfg
 }
 
-func SaveURLInStorage(full string) (string, error) {
+func SaveURLInFileStorage(full string) (string, error) {
 	// Проверим, есть ли уже такая ссылка
 	if shortURL := getShortURLFromStorage(full); shortURL != "" {
 		return shortURL, nil
