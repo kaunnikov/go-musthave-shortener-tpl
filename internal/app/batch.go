@@ -40,7 +40,7 @@ func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resItem := batchResponseMessage{item.CorrelationId, m.cfg.ResultURL + "/" + short}
+		resItem := batchResponseMessage{item.CorrelationID, m.cfg.ResultURL + "/" + short}
 		result = append(result, resItem)
 	}
 

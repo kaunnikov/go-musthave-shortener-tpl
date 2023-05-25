@@ -13,11 +13,11 @@ type app struct {
 }
 
 type batchResponseMessage struct {
-	CorrelationId string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
 }
 type batchRequestMessage struct {
-	CorrelationId string `json:"correlation_id"`
+	CorrelationID string `json:"correlation_id"`
 	URL           string `json:"original_url"`
 }
 
