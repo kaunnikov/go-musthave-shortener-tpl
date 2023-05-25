@@ -19,7 +19,7 @@ func SaveURLInStorage(full string, short string) (string, error) {
 }
 
 func GetFullURL(short string) (string, error) {
-	// Если подключена БД - Сохраняем в БД
+	// Если подключена БД - Достаём из БД
 	if err := db.Ping(); err == nil {
 		fullURL, err := db.GetFullByShortURL(short)
 		if err != nil {
