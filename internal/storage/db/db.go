@@ -11,27 +11,27 @@ import (
 
 var (
 	tableName = "url_storage"
-	storage   DbStorage
+	storage   DBStorage
 )
 
-type DbStorage struct {
+type DBStorage struct {
 	connect *sql.DB
 }
 
-func Init(cfg *config.AppConfig) (*DbStorage, error) {
+func Init(cfg *config.AppConfig) (*DBStorage, error) {
 	db, err := sql.Open("pgx", cfg.DatabaseDSN)
 	if err != nil {
 		logging.Fatalf("DB don't open: %s", err)
 		return nil, err
 	}
-	storage = DbStorage{connect: db}
+	storage = DBStorage{connect: db}
 
 	checkTables()
 
 	return &storage, nil
 }
 
-func (db *DbStorage) Save(full string) (string, error) {
+func (db *DBStorage) Save(full string) (string, error) {
 	// Сначала попробуем найти старую запись в БД
 	shortFromDB, err := getShortByFullURL(full)
 	if err != nil {
@@ -57,7 +57,7 @@ func (db *DbStorage) Save(full string) (string, error) {
 	return short, nil
 }
 
-func (db *DbStorage) Get(short string) (string, error) {
+func (db *DBStorage) Get(short string) (string, error) {
 	var fullURL string
 	res := storage.connect.QueryRow("SELECT full_url FROM "+tableName+" WHERE short_url = $1;", short)
 	err := res.Scan(&fullURL)
@@ -70,7 +70,7 @@ func (db *DbStorage) Get(short string) (string, error) {
 	return fullURL, nil
 }
 
-func (db *DbStorage) Ping() error {
+func (db *DBStorage) Ping() error {
 	err := storage.connect.Ping()
 	if err != nil {
 		return err
