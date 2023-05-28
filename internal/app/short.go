@@ -12,7 +12,7 @@ func (m *app) ShortHandler(w http.ResponseWriter, r *http.Request) {
 
 	full, err := storage.GetFullURL(d)
 	if err != nil {
-		logging.Errorf("Find FullUrl failed: %s", r.URL)
+		logging.Errorf("Cannot find short url for full %q: %s", r.URL, err)
 		http.Error(w, "Server Error!", http.StatusInternalServerError)
 	}
 

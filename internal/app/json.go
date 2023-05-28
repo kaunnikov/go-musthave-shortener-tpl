@@ -51,7 +51,8 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 
 		_, err = w.Write(resp)
 		if err != nil {
-			logging.Fatalf("cannot write response to the client: %s", err)
+			logging.Errorf("cannot write response to the client: %s", err)
+			http.Error(w, "Error in server!", http.StatusBadRequest)
 		}
 		return
 	}
@@ -62,21 +63,19 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-
-	shortRes := shortenResponse{
+	resp, err := json.Marshal(shortenResponse{
 		Result: m.cfg.ResultURL + "/" + short,
-	}
-
-	resp, err := json.Marshal(shortRes)
+	})
 	if err != nil {
 		logging.Errorf("cannot encode response: %s", err)
 		http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
 	}
 
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(resp)
 	if err != nil {
-		logging.Fatalf("cannot write response to the client: %s", err)
+		logging.Errorf("cannot write response to the client: %s", err)
+		http.Error(w, fmt.Sprintf("cannot write response to the client: %s", err), http.StatusBadRequest)
 	}
 }

@@ -57,7 +57,7 @@ func (fs *FsStorage) Save(full string) (string, error) {
 func (fs *FsStorage) Get(short string) (string, error) {
 	file, err := os.OpenFile(storage.path, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
-		logging.Errorf("storage don't open to read! Error: %w", err)
+		logging.Errorf("storage don't open to read! Error: %s", err)
 		return "", err
 	}
 

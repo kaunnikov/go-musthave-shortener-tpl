@@ -13,6 +13,7 @@ func (m *app) PingHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logging.Errorf("Ping fail: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

@@ -54,6 +54,8 @@ func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write(resp)
 	if err != nil {
-		logging.Fatalf("cannot write response to the client: %s", err)
+		logging.Errorf("cannot write response to the client: %s", err)
+		http.Error(w, fmt.Sprintf("cannot write response to the client: %s", err), http.StatusBadRequest)
+
 	}
 }

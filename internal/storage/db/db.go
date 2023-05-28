@@ -21,12 +21,15 @@ type DBStorage struct {
 func Init(cfg *config.AppConfig) (*DBStorage, error) {
 	db, err := sql.Open("pgx", cfg.DatabaseDSN)
 	if err != nil {
-		logging.Fatalf("DB don't open: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("DB don't open: %s", err)
 	}
 	storage = DBStorage{connect: db}
 
-	checkTables()
+	err = checkTables()
+	if err != nil {
+		logging.Errorf("Don't check tables: %s", err)
+		return nil, err
+	}
 
 	return &storage, nil
 }
@@ -79,11 +82,12 @@ func (db *DBStorage) Ping() error {
 	return nil
 }
 
-func checkTables() {
+func checkTables() error {
 	_, err := storage.connect.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (short_url varchar(16) not null, full_url varchar(128) not null)")
 	if err != nil {
-		logging.Fatalf("Table "+tableName+" don't created: %s", err)
+		return fmt.Errorf("table "+tableName+" don't created: %w", err)
 	}
+	return nil
 }
 
 func getShortByFullURL(fullURL string) (string, error) {

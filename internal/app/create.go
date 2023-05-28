@@ -30,7 +30,8 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusConflict)
 		_, err = w.Write([]byte(m.cfg.ResultURL + "/" + doubleErr.ShortURL))
 		if err != nil {
-			logging.Fatalf("cannot write response to the client: %s", err)
+			logging.Errorf("cannot write response to the client: %s", err)
+			http.Error(w, fmt.Sprintf("cannot write response to the client: %s", err), http.StatusBadRequest)
 		}
 		return
 	}
@@ -44,6 +45,7 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write([]byte(m.cfg.ResultURL + "/" + short))
 	if err != nil {
-		logging.Fatalf("cannot write response to the client: %s", err)
+		logging.Errorf("cannot write response to the client: %s", err)
+		http.Error(w, fmt.Sprintf("cannot write response to the client: %s", err), http.StatusBadRequest)
 	}
 }

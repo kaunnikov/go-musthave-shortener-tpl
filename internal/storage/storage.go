@@ -22,17 +22,17 @@ func Init(cfg *config.AppConfig) {
 		// "host=localhost port=5433 user=postgres password=password dbname=postgres sslmode=disable"
 		defaultStorage, err = db.Init(cfg)
 		if err != nil {
-			logging.Fatalf("DB don't init: %w", err)
+			logging.Fatalf("DB don't init: %s", err)
 		}
 	} else if cfg.FileStoragePath != "" {
 		defaultStorage, err = fs.Init(cfg)
 		if err != nil {
-			logging.Fatalf("file storage don't init: %w", err)
+			logging.Fatalf("file storage don't init: %s", err)
 		}
 	} else {
 		defaultStorage, err = mem.Init()
 		if err != nil {
-			logging.Fatalf("memory storage don't init: %w", err)
+			logging.Fatalf("memory storage don't init: %s", err)
 		}
 	}
 }
@@ -40,7 +40,7 @@ func Init(cfg *config.AppConfig) {
 func SaveURLInStorage(full string) (string, error) {
 	short, err := defaultStorage.Save(full)
 	if err != nil {
-		logging.Errorf("Don't save full URL: %w", err)
+		logging.Errorf("Don't save full URL: %s", err)
 		return "", err
 	}
 	return short, nil
