@@ -7,7 +7,7 @@ import (
 	"kaunnikov/go-musthave-shortener-tpl/internal/app"
 	"kaunnikov/go-musthave-shortener-tpl/internal/config"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
-	"kaunnikov/go-musthave-shortener-tpl/internal/storage/fs"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -50,7 +50,7 @@ func TestRouter(t *testing.T) {
 		log.Fatalf("logger don't Run!: %s", err)
 	}
 
-	fs.Init(cfg)
+	storage.Init(cfg)
 	newApp := app.NewApp(cfg)
 
 	ts := httptest.NewServer(newApp)
