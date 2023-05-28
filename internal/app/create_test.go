@@ -67,5 +67,4 @@ func TestRouter(t *testing.T) {
 	statusCode, _ = testRequest(t, ts, "GET", shortURL)
 
 	assert.Equal(t, http.StatusOK, statusCode)
-
 }

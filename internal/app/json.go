@@ -5,10 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/internal/errs"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
-	"kaunnikov/go-musthave-shortener-tpl/internal/storage/db"
-	"kaunnikov/go-musthave-shortener-tpl/internal/utils"
 	"net/http"
 )
 
@@ -33,10 +32,10 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := storage.SaveURLInStorage(t.URL, utils.RandSeq(5))
+	short, err := storage.SaveURLInStorage(t.URL)
 
 	// Если нашли запись в БД, то отдадим с нужным статусом
-	var doubleErr *db.DoubleError
+	var doubleErr *errs.DoubleError
 	if errors.As(err, &doubleErr) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusConflict)

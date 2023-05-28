@@ -6,7 +6,6 @@ import (
 	"io"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
-	"kaunnikov/go-musthave-shortener-tpl/internal/utils"
 	"net/http"
 )
 
@@ -33,7 +32,7 @@ func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	var result []batchResponseMessage
 	for _, item := range t {
-		short, err := storage.SaveURLInStorage(item.URL, utils.RandSeq(5))
+		short, err := storage.SaveURLInStorage(item.URL)
 		if err != nil {
 			logging.Errorf("error write data: %s", err)
 			http.Error(w, "Error in server!", http.StatusBadRequest)

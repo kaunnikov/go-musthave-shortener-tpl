@@ -4,75 +4,36 @@ import (
 	"database/sql"
 	"fmt"
 	"kaunnikov/go-musthave-shortener-tpl/internal/config"
+	"kaunnikov/go-musthave-shortener-tpl/internal/errs"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
+	"kaunnikov/go-musthave-shortener-tpl/internal/utils"
 )
 
-var tableName = "url_storage"
-var conf *config.AppConfig
+var (
+	tableName = "url_storage"
+	storage   DbStorage
+)
 
-type DoubleError struct {
-	ShortURL string
-	Err      error
+type DbStorage struct {
+	connect *sql.DB
 }
 
-// Error добавляет поддержку интерфейса error для типа LabelError.
-func (d *DoubleError) Error() string {
-	return fmt.Sprintf("[%s] %v", d.ShortURL, d.Err)
-}
-
-func Init(cfg *config.AppConfig) {
-	conf = cfg
-	checkTables()
-}
-
-func connect() (*sql.DB, error) {
-	db, err := sql.Open("pgx", conf.DatabaseDSN)
+func Init(cfg *config.AppConfig) (*DbStorage, error) {
+	db, err := sql.Open("pgx", cfg.DatabaseDSN)
 	if err != nil {
 		logging.Fatalf("DB don't open: %s", err)
 		return nil, err
 	}
+	storage = DbStorage{connect: db}
 
-	return db, nil
+	checkTables()
+
+	return &storage, nil
 }
 
-func Ping() error {
-	if conf == nil {
-		return fmt.Errorf("DB dot't init")
-	}
-	db, err := connect()
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			logging.Fatalf("DB don't Close: %s", err)
-		}
-	}(db)
-
-	if err != nil {
-		return err
-	}
-
-	err = db.Ping()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func GetOrSave(fullURL string, short string) (string, error) {
-	db, err := connect()
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			logging.Fatalf("DB don't Close: %s", err)
-		}
-	}(db)
-	if err != nil {
-		return "", err
-	}
-
+func (db *DbStorage) Save(full string) (string, error) {
 	// Сначала попробуем найти старую запись в БД
-	shortFromDB, err := getShortByFullURL(db, fullURL)
+	shortFromDB, err := getShortByFullURL(full)
 	if err != nil {
 		logging.Infof("Err in getByFullURL: %s", err)
 		return "", err
@@ -80,14 +41,15 @@ func GetOrSave(fullURL string, short string) (string, error) {
 
 	// Если нашли - отдаём
 	if shortFromDB != "" {
-		return "", &DoubleError{
+		return "", &errs.DoubleError{
 			ShortURL: shortFromDB,
-			Err:      fmt.Errorf("double for %s", fullURL),
+			Err:      fmt.Errorf("double for %s", full),
 		}
 	}
 
 	// Если не нашли - создаём
-	short, err = insert(db, short, fullURL)
+	short := utils.RandSeq(5)
+	short, err = insert(short, full)
 	if err != nil {
 		logging.Infof("Err in insert: %s", err)
 		return "", err
@@ -95,39 +57,10 @@ func GetOrSave(fullURL string, short string) (string, error) {
 	return short, nil
 }
 
-func checkTables() {
-	db, err := connect()
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			logging.Fatalf("DB don't Close: %s", err)
-		}
-	}(db)
-	if err != nil {
-		logging.Fatalf("DB don't work: %s", err)
-	}
-
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (short_url varchar(16) not null, full_url varchar(128) not null)")
-	if err != nil {
-		logging.Fatalf("Table "+tableName+" don't created: %s", err)
-	}
-}
-
-func GetFullByShortURL(shortURL string) (string, error) {
-	db, err := connect()
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			logging.Fatalf("DB don't Close: %s", err)
-		}
-	}(db)
-	if err != nil {
-		logging.Fatalf("DB don't work: %s", err)
-	}
-
+func (db *DbStorage) Get(short string) (string, error) {
 	var fullURL string
-	res := db.QueryRow("SELECT full_url FROM "+tableName+" WHERE short_url = $1;", shortURL)
-	err = res.Scan(&fullURL)
+	res := storage.connect.QueryRow("SELECT full_url FROM "+tableName+" WHERE short_url = $1;", short)
+	err := res.Scan(&fullURL)
 	if err == sql.ErrNoRows {
 		return "", nil
 	}
@@ -135,12 +68,27 @@ func GetFullByShortURL(shortURL string) (string, error) {
 		return "", err
 	}
 	return fullURL, nil
-
 }
 
-func getShortByFullURL(db *sql.DB, fullURL string) (string, error) {
+func (db *DbStorage) Ping() error {
+	err := storage.connect.Ping()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func checkTables() {
+	_, err := storage.connect.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (short_url varchar(16) not null, full_url varchar(128) not null)")
+	if err != nil {
+		logging.Fatalf("Table "+tableName+" don't created: %s", err)
+	}
+}
+
+func getShortByFullURL(fullURL string) (string, error) {
 	var shortURL string
-	row := db.QueryRow("SELECT short_url FROM "+tableName+" WHERE full_url = $1;", fullURL)
+	row := storage.connect.QueryRow("SELECT short_url FROM "+tableName+" WHERE full_url = $1;", fullURL)
 	err := row.Scan(&shortURL)
 	if err == sql.ErrNoRows {
 		return "", nil
@@ -151,8 +99,8 @@ func getShortByFullURL(db *sql.DB, fullURL string) (string, error) {
 	return shortURL, nil
 }
 
-func insert(db *sql.DB, shortURL string, fullURL string) (string, error) {
-	_, err := db.Exec("INSERT INTO "+tableName+" (short_url, full_url) VALUES ($1, $2);", shortURL, fullURL)
+func insert(shortURL string, fullURL string) (string, error) {
+	_, err := storage.connect.Exec("INSERT INTO "+tableName+" (short_url, full_url) VALUES ($1, $2);", shortURL, fullURL)
 	if err != nil {
 		return "", err
 	}
