@@ -10,25 +10,25 @@ import (
 	"os"
 )
 
-var storage FsStorage
+var storage FileStorage
 
 type StorageItem struct {
 	URL      string `json:"full"`
 	ShortURL string `json:"short"`
 }
 
-type FsStorage struct {
+type FileStorage struct {
 	path string
 }
 
-func Init(cfg *config.AppConfig) (*FsStorage, error) {
-	storage = FsStorage{
+func Init(cfg *config.AppConfig) (*FileStorage, error) {
+	storage = FileStorage{
 		path: cfg.FileStoragePath,
 	}
 	return &storage, nil
 }
 
-func (fs *FsStorage) Save(full string) (string, error) {
+func (fs *FileStorage) Save(full string) (string, error) {
 	// Проверим, есть ли уже такая ссылка
 	if shortURL := getShortURLFromStorage(full); shortURL != "" {
 		return shortURL, nil
@@ -38,7 +38,8 @@ func (fs *FsStorage) Save(full string) (string, error) {
 	file, err := os.OpenFile(storage.path, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 
 	if err != nil {
-		return "", fmt.Errorf("storage don't open to write! Error: %s. Path: %s", err, storage.path)
+		logging.Errorf("storage don't open to write! Error: %s. Path: %s", err, storage.path)
+		return "", fmt.Errorf("storage don't open to write! Error: %w. Path: %s", err, storage.path)
 	}
 
 	item := StorageItem{URL: full, ShortURL: utils.RandSeq(5)}
@@ -54,7 +55,7 @@ func (fs *FsStorage) Save(full string) (string, error) {
 	return item.ShortURL, err
 }
 
-func (fs *FsStorage) Get(short string) (string, error) {
+func (fs *FileStorage) Get(short string) (string, error) {
 	file, err := os.OpenFile(storage.path, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		logging.Errorf("storage don't open to read! Error: %s", err)
@@ -68,6 +69,7 @@ func (fs *FsStorage) Get(short string) (string, error) {
 		err = json.Unmarshal([]byte(s), &item)
 		if err != nil {
 			logging.Errorf("storage don't open to read! Error: %s. Path: %s", err, storage.path)
+			return "", err
 		}
 
 		if item.ShortURL == short {
@@ -78,7 +80,7 @@ func (fs *FsStorage) Get(short string) (string, error) {
 	return "", nil
 }
 
-func (fs *FsStorage) Ping() error {
+func (fs *FileStorage) Ping() error {
 	return nil
 }
 
@@ -86,6 +88,7 @@ func getShortURLFromStorage(fullURL string) string {
 	file, err := os.OpenFile(storage.path, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		logging.Errorf("storage don't open to read! Error: %s. Path: %s", err, storage.path)
+		return ""
 	}
 
 	r := bufio.NewReader(file)
@@ -95,6 +98,7 @@ func getShortURLFromStorage(fullURL string) string {
 		err = json.Unmarshal([]byte(s), &item)
 		if err != nil {
 			logging.Errorf("Cannot decode urls: %s", err)
+			return ""
 		}
 
 		if item.URL == fullURL {

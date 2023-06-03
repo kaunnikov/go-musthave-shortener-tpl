@@ -8,18 +8,18 @@ import (
 var (
 	URLMap         = make(map[string]string, 1000)
 	URLStorageSync = sync.Mutex{}
-	storage        MemStorage
+	storage        MemoryStorage
 )
 
-type MemStorage struct {
+type MemoryStorage struct {
 }
 
-func Init() (*MemStorage, error) {
-	storage = MemStorage{}
+func Init() (*MemoryStorage, error) {
+	storage = MemoryStorage{}
 	return &storage, nil
 }
 
-func (mem *MemStorage) Save(full string) (string, error) {
+func (mem *MemoryStorage) Save(full string) (string, error) {
 	URLStorageSync.Lock()
 	defer URLStorageSync.Unlock()
 
@@ -28,13 +28,13 @@ func (mem *MemStorage) Save(full string) (string, error) {
 	return short, nil
 }
 
-func (mem *MemStorage) Get(short string) (string, error) {
+func (mem *MemoryStorage) Get(short string) (string, error) {
 	URLStorageSync.Lock()
 	defer URLStorageSync.Unlock()
 
 	return URLMap[short], nil
 }
 
-func (mem *MemStorage) Ping() error {
+func (mem *MemoryStorage) Ping() error {
 	return nil
 }

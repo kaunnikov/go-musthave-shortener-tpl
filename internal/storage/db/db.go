@@ -11,19 +11,20 @@ import (
 
 var (
 	tableName = "url_storage"
-	storage   DBStorage
+	storage   DataBaseStorage
 )
 
-type DBStorage struct {
+type DataBaseStorage struct {
 	connect *sql.DB
 }
 
-func Init(cfg *config.AppConfig) (*DBStorage, error) {
+func Init(cfg *config.AppConfig) (*DataBaseStorage, error) {
 	db, err := sql.Open("pgx", cfg.DatabaseDSN)
 	if err != nil {
-		return nil, fmt.Errorf("DB don't open: %s", err)
+		logging.Errorf("DB don't open: %s", err)
+		return nil, fmt.Errorf("DB don't open: %w", err)
 	}
-	storage = DBStorage{connect: db}
+	storage = DataBaseStorage{connect: db}
 
 	err = checkTables()
 	if err != nil {
@@ -34,7 +35,7 @@ func Init(cfg *config.AppConfig) (*DBStorage, error) {
 	return &storage, nil
 }
 
-func (db *DBStorage) Save(full string) (string, error) {
+func (db *DataBaseStorage) Save(full string) (string, error) {
 	// Сначала попробуем найти старую запись в БД
 	shortFromDB, err := getShortByFullURL(full)
 	if err != nil {
@@ -60,7 +61,7 @@ func (db *DBStorage) Save(full string) (string, error) {
 	return short, nil
 }
 
-func (db *DBStorage) Get(short string) (string, error) {
+func (db *DataBaseStorage) Get(short string) (string, error) {
 	var fullURL string
 	res := storage.connect.QueryRow("SELECT full_url FROM "+tableName+" WHERE short_url = $1;", short)
 	err := res.Scan(&fullURL)
@@ -73,7 +74,7 @@ func (db *DBStorage) Get(short string) (string, error) {
 	return fullURL, nil
 }
 
-func (db *DBStorage) Ping() error {
+func (db *DataBaseStorage) Ping() error {
 	err := storage.connect.Ping()
 	if err != nil {
 		return err
