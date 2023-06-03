@@ -4,7 +4,7 @@ import (
 	"kaunnikov/go-musthave-shortener-tpl/internal/app"
 	"kaunnikov/go-musthave-shortener-tpl/internal/config"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
-	"kaunnikov/go-musthave-shortener-tpl/internal/storage/fs"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
 	"log"
 	"net/http"
 )
@@ -16,7 +16,7 @@ func main() {
 		log.Fatalf("logger don't Run!: %s", err)
 	}
 
-	fs.Init(cfg)
+	storage.Init(cfg)
 	newApp := app.NewApp(cfg)
 
 	logging.Infof("Running server on %s", cfg.Host)

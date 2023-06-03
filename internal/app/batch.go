@@ -2,16 +2,14 @@ package app
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"kaunnikov/go-musthave-shortener-tpl/internal/errs"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
 	"net/http"
 )
 
-func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
+func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Content-Type") != "application/json" {
 		logging.Errorf("Invalid Content Type: %s", r.Header.Get("Content-Type"))
 		http.Error(w, "Invalid Content Type!", http.StatusBadRequest)
@@ -24,7 +22,7 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var t requestMessage
+	var t []batchRequestMessage
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		logging.Errorf("cannot decode request body to `JSON`: %s", err)
@@ -32,50 +30,32 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := storage.SaveURLInStorage(t.URL)
-
-	// Если нашли запись в БД, то отдадим с нужным статусом
-	var doubleErr *errs.DoubleError
-	if errors.As(err, &doubleErr) {
-		w.Header().Add("Content-Type", "application/json")
-		w.WriteHeader(http.StatusConflict)
-
-		shortRes := shortenResponse{
-			Result: m.cfg.ResultURL + "/" + doubleErr.ShortURL,
-		}
-		resp, err := json.Marshal(shortRes)
+	var result []batchResponseMessage
+	for _, item := range t {
+		short, err := storage.SaveURLInStorage(item.URL)
 		if err != nil {
-			logging.Errorf("cannot encode response: %s", err)
-			http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
-		}
-
-		_, err = w.Write(resp)
-		if err != nil {
-			logging.Errorf("cannot write response to the client: %s", err)
+			logging.Errorf("error write data: %s", err)
 			http.Error(w, "Error in server!", http.StatusBadRequest)
+			return
 		}
-		return
+
+		resItem := batchResponseMessage{item.CorrelationID, m.cfg.ResultURL + "/" + short}
+		result = append(result, resItem)
 	}
 
-	if err != nil {
-		logging.Errorf("error write data: %s", err)
-		http.Error(w, "Error in server!", http.StatusBadRequest)
-		return
-	}
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 
-	resp, err := json.Marshal(shortenResponse{
-		Result: m.cfg.ResultURL + "/" + short,
-	})
+	resp, err := json.Marshal(result)
 	if err != nil {
 		logging.Errorf("cannot encode response: %s", err)
 		http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
 	}
 
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(resp)
 	if err != nil {
 		logging.Errorf("cannot write response to the client: %s", err)
 		http.Error(w, fmt.Sprintf("cannot write response to the client: %s", err), http.StatusBadRequest)
+
 	}
 }

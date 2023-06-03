@@ -1,10 +1,12 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/internal/errs"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
-	"kaunnikov/go-musthave-shortener-tpl/internal/storage/fs"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
 	"net/http"
 )
 
@@ -21,7 +23,18 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := fs.SaveURLInStorage(string(responseData))
+	short, err := storage.SaveURLInStorage(string(responseData))
+	// Если нашли запись в БД, то отдадим с нужным статусом
+	var doubleErr *errs.DoubleError
+	if errors.As(err, &doubleErr) {
+		w.WriteHeader(http.StatusConflict)
+		_, err = w.Write([]byte(m.cfg.ResultURL + "/" + doubleErr.ShortURL))
+		if err != nil {
+			logging.Errorf("cannot write response to the client: %s", err)
+			http.Error(w, fmt.Sprintf("cannot write response to the client: %s", err), http.StatusBadRequest)
+		}
+		return
+	}
 	if err != nil {
 		logging.Errorf("error write data: %s", err)
 		http.Error(w, "Error in server!", http.StatusBadRequest)
@@ -32,6 +45,7 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err = w.Write([]byte(m.cfg.ResultURL + "/" + short))
 	if err != nil {
-		logging.Fatalf("cannot write response to the client: %s", err)
+		logging.Errorf("cannot write response to the client: %s", err)
+		http.Error(w, fmt.Sprintf("cannot write response to the client: %s", err), http.StatusBadRequest)
 	}
 }

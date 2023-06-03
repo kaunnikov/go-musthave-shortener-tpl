@@ -12,6 +12,15 @@ type app struct {
 	cfg *config.AppConfig
 }
 
+type batchResponseMessage struct {
+	CorrelationID string `json:"correlation_id"`
+	ShortURL      string `json:"short_url"`
+}
+type batchRequestMessage struct {
+	CorrelationID string `json:"correlation_id"`
+	URL           string `json:"original_url"`
+}
+
 type requestMessage struct {
 	URL string `json:"URL"`
 }
@@ -36,4 +45,6 @@ func (m *app) registerRouetes() {
 	m.Post("/", m.CreateHandler)
 	m.Get("/{id}", m.ShortHandler)
 	m.Post("/api/shorten", m.JSONHandler)
+	m.Post("/api/shorten/batch", m.BatchHandler)
+	m.Get("/ping", m.PingHandler)
 }

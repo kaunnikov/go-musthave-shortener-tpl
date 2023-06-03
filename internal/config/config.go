@@ -10,6 +10,7 @@ type AppConfig struct {
 	Host            string
 	ResultURL       string
 	FileStoragePath string
+	DatabaseDSN     string
 }
 
 func LoadConfig() *AppConfig {
@@ -23,6 +24,7 @@ func loadFromArgs(cfg *AppConfig) {
 	flag.StringVar(&cfg.Host, "a", "localhost:8080", "Default Host:port")
 	flag.StringVar(&cfg.ResultURL, "b", "http://localhost:8080", "Default result URL")
 	flag.StringVar(&cfg.FileStoragePath, "f", "/tmp/short-url-db-kaunnikov.json", "Default File Storage Path")
+	flag.StringVar(&cfg.DatabaseDSN, "d", "", "Database DSN")
 	flag.Parse()
 }
 
@@ -40,5 +42,10 @@ func loadFromENV(cfg *AppConfig) {
 	fileStorageFile := strings.TrimSpace(os.Getenv("FILE_STORAGE_PATH"))
 	if fileStorageFile != "" {
 		cfg.FileStoragePath = fileStorageFile
+	}
+
+	databaseDSN := strings.TrimSpace(os.Getenv("DATABASE_DSN"))
+	if databaseDSN != "" {
+		cfg.DatabaseDSN = databaseDSN
 	}
 }
