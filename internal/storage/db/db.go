@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"kaunnikov/go-musthave-shortener-tpl/internal/config"
@@ -63,7 +64,7 @@ func (db *DataBaseStorage) Save(full string) (string, error) {
 
 func (db *DataBaseStorage) Get(short string) (string, error) {
 	var fullURL string
-	res := storage.connect.QueryRow("SELECT full_url FROM "+tableName+" WHERE short_url = $1;", short)
+	res := storage.connect.QueryRowContext(context.Background(), "SELECT full_url FROM "+tableName+" WHERE short_url = $1;", short)
 	err := res.Scan(&fullURL)
 	if err == sql.ErrNoRows {
 		return "", nil
@@ -84,7 +85,7 @@ func (db *DataBaseStorage) Ping() error {
 }
 
 func checkTables() error {
-	_, err := storage.connect.Exec("CREATE TABLE IF NOT EXISTS " + tableName + " (short_url varchar(16) not null, full_url varchar(128) not null)")
+	_, err := storage.connect.ExecContext(context.Background(), "CREATE TABLE IF NOT EXISTS "+tableName+" (short_url varchar(16) not null, full_url varchar(128) not null)")
 	if err != nil {
 		return fmt.Errorf("table "+tableName+" don't created: %w", err)
 	}
@@ -93,7 +94,7 @@ func checkTables() error {
 
 func getShortByFullURL(fullURL string) (string, error) {
 	var shortURL string
-	row := storage.connect.QueryRow("SELECT short_url FROM "+tableName+" WHERE full_url = $1;", fullURL)
+	row := storage.connect.QueryRowContext(context.Background(), "SELECT short_url FROM "+tableName+" WHERE full_url = $1;", fullURL)
 	err := row.Scan(&shortURL)
 	if err == sql.ErrNoRows {
 		return "", nil
@@ -105,7 +106,7 @@ func getShortByFullURL(fullURL string) (string, error) {
 }
 
 func insert(shortURL string, fullURL string) (string, error) {
-	_, err := storage.connect.Exec("INSERT INTO "+tableName+" (short_url, full_url) VALUES ($1, $2);", shortURL, fullURL)
+	_, err := storage.connect.ExecContext(context.Background(), "INSERT INTO "+tableName+" (short_url, full_url) VALUES ($1, $2);", shortURL, fullURL)
 	if err != nil {
 		return "", err
 	}
