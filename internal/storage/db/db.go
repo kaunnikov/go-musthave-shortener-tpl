@@ -71,9 +71,9 @@ func (db *DataBaseStorage) Save(token string, full string) (string, error) {
 	return short, nil
 }
 
-func (db *DataBaseStorage) Get(token string, short string) (string, error) {
+func (db *DataBaseStorage) Get(short string) (string, error) {
 	var fullURL string
-	res := storage.connect.QueryRowContext(context.Background(), "SELECT full_url FROM "+tableName+" WHERE short_url = $1 AND user_token = $2;", short, token)
+	res := storage.connect.QueryRowContext(context.Background(), "SELECT full_url FROM "+tableName+" WHERE short_url = $1;", short)
 	err := res.Scan(&fullURL)
 	if err == sql.ErrNoRows {
 		return "", nil

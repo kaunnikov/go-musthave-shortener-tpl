@@ -10,7 +10,7 @@ import (
 
 type Storage interface {
 	Save(token string, full string) (string, error)
-	Get(token string, short string) (string, error)
+	Get(short string) (string, error)
 	GetUrlsByUser(token string) ([]db.UrlsByUserResponseMessage, error)
 	Ping() error
 }
@@ -41,8 +41,8 @@ func Init(cfg *config.AppConfig) {
 func SaveURLInStorage(token string, full string) (string, error) {
 	return defaultStorage.Save(token, full)
 }
-func GetFullURL(token string, short string) (string, error) {
-	return defaultStorage.Get(token, short)
+func GetFullURL(short string) (string, error) {
+	return defaultStorage.Get(short)
 }
 
 func GetURLsByUser(token string) ([]db.UrlsByUserResponseMessage, error) {

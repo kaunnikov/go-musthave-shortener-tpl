@@ -59,7 +59,7 @@ func (fs *FileStorage) Save(token string, full string) (string, error) {
 	return item.ShortURL, err
 }
 
-func (fs *FileStorage) Get(token string, short string) (string, error) {
+func (fs *FileStorage) Get(short string) (string, error) {
 	file, err := os.OpenFile(storage.path, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		logging.Errorf("storage don't open to read! Error: %s", err)
@@ -76,7 +76,7 @@ func (fs *FileStorage) Get(token string, short string) (string, error) {
 			return "", err
 		}
 
-		if item.ShortURL == short && item.Token == token {
+		if item.ShortURL == short {
 			return item.URL, nil
 		}
 		s, e = readLine(r)
