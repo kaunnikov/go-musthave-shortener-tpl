@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/internal/auth"
 	"kaunnikov/go-musthave-shortener-tpl/internal/errs"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
@@ -23,7 +24,8 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := storage.SaveURLInStorage(string(responseData))
+	token, _ := auth.GetUserToken(w, r)
+	short, err := storage.SaveURLInStorage(token, string(responseData))
 	// Если нашли запись в БД, то отдадим с нужным статусом
 	var doubleErr *errs.DoubleError
 	if errors.As(err, &doubleErr) {

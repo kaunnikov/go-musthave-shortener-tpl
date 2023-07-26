@@ -9,8 +9,9 @@ import (
 )
 
 type Storage interface {
-	Save(full string) (string, error)
-	Get(short string) (string, error)
+	Save(token string, full string) (string, error)
+	Get(token string, short string) (string, error)
+	GetUrlsByUser(token string) ([]db.UrlsByUserResponseMessage, error)
 	Ping() error
 }
 
@@ -30,28 +31,24 @@ func Init(cfg *config.AppConfig) {
 			logging.Fatalf("file storage don't init: %s", err)
 		}
 	} else {
-		defaultStorage, err = mem.Init()
+		defaultStorage, err = mem.Init(cfg)
 		if err != nil {
 			logging.Fatalf("memory storage don't init: %s", err)
 		}
 	}
 }
 
-func SaveURLInStorage(full string) (string, error) {
-	short, err := defaultStorage.Save(full)
-	if err != nil {
-		logging.Errorf("Don't save full URL: %s", err)
-		return "", err
-	}
-	return short, nil
+func SaveURLInStorage(token string, full string) (string, error) {
+	return defaultStorage.Save(token, full)
 }
-func GetFullURL(short string) (string, error) {
-	full, err := defaultStorage.Get(short)
-	if err != nil {
-		return "", err
-	}
-	return full, nil
+func GetFullURL(token string, short string) (string, error) {
+	return defaultStorage.Get(token, short)
 }
+
+func GetURLsByUser(token string) ([]db.UrlsByUserResponseMessage, error) {
+	return defaultStorage.GetUrlsByUser(token)
+}
+
 func Ping() error {
 	return defaultStorage.Ping()
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/internal/auth"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
 	"net/http"
@@ -31,8 +32,9 @@ func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var result []batchResponseMessage
+	token, _ := auth.GetUserToken(w, r)
 	for _, item := range t {
-		short, err := storage.SaveURLInStorage(item.URL)
+		short, err := storage.SaveURLInStorage(token, item.URL)
 		if err != nil {
 			logging.Errorf("error write data: %s", err)
 			http.Error(w, "Error in server!", http.StatusBadRequest)

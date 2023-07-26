@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"kaunnikov/go-musthave-shortener-tpl/internal/config"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
+	"kaunnikov/go-musthave-shortener-tpl/internal/storage/db"
 	"kaunnikov/go-musthave-shortener-tpl/internal/utils"
 	"os"
 )
@@ -13,24 +14,27 @@ import (
 var storage FileStorage
 
 type StorageItem struct {
+	Token    string `json:"token"`
 	URL      string `json:"full"`
 	ShortURL string `json:"short"`
 }
 
 type FileStorage struct {
-	path string
+	path      string
+	resultURL string
 }
 
 func Init(cfg *config.AppConfig) (*FileStorage, error) {
 	storage = FileStorage{
-		path: cfg.FileStoragePath,
+		path:      cfg.FileStoragePath,
+		resultURL: cfg.ResultURL,
 	}
 	return &storage, nil
 }
 
-func (fs *FileStorage) Save(full string) (string, error) {
+func (fs *FileStorage) Save(token string, full string) (string, error) {
 	// Проверим, есть ли уже такая ссылка
-	if shortURL := getShortURLFromStorage(full); shortURL != "" {
+	if shortURL := getShortURLFromStorage(token, full); shortURL != "" {
 		return shortURL, nil
 	}
 
@@ -42,7 +46,7 @@ func (fs *FileStorage) Save(full string) (string, error) {
 		return "", fmt.Errorf("storage don't open to write! Error: %w. Path: %s", err, storage.path)
 	}
 
-	item := StorageItem{URL: full, ShortURL: utils.RandSeq(5)}
+	item := StorageItem{Token: token, URL: full, ShortURL: utils.RandSeq(5)}
 	data, err := json.Marshal(item)
 	if err != nil {
 		return "", fmt.Errorf("cannot encode storage item %s", err)
@@ -55,7 +59,7 @@ func (fs *FileStorage) Save(full string) (string, error) {
 	return item.ShortURL, err
 }
 
-func (fs *FileStorage) Get(short string) (string, error) {
+func (fs *FileStorage) Get(token string, short string) (string, error) {
 	file, err := os.OpenFile(storage.path, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		logging.Errorf("storage don't open to read! Error: %s", err)
@@ -72,7 +76,7 @@ func (fs *FileStorage) Get(short string) (string, error) {
 			return "", err
 		}
 
-		if item.ShortURL == short {
+		if item.ShortURL == short && item.Token == token {
 			return item.URL, nil
 		}
 		s, e = readLine(r)
@@ -80,11 +84,42 @@ func (fs *FileStorage) Get(short string) (string, error) {
 	return "", nil
 }
 
+func (fs *FileStorage) GetUrlsByUser(token string) ([]db.UrlsByUserResponseMessage, error) {
+	file, err := os.OpenFile(storage.path, os.O_RDONLY|os.O_CREATE, 0666)
+	if err != nil {
+		logging.Errorf("storage don't open to read! Error: %s", err)
+		return nil, err
+	}
+
+	r := bufio.NewReader(file)
+	s, e := readLine(r)
+	userURLs := make([]db.UrlsByUserResponseMessage, 0)
+	var item StorageItem
+
+	for e == nil {
+		err = json.Unmarshal([]byte(s), &item)
+		if err != nil {
+			logging.Errorf("storage don't open to read! Error: %s. Path: %s", err, storage.path)
+			return nil, err
+		}
+
+		if item.Token == token {
+			userURLs = append(userURLs, db.UrlsByUserResponseMessage{
+				ShortURL: fs.resultURL + "/" + item.ShortURL,
+				FullURL:  item.URL,
+			})
+
+		}
+		s, e = readLine(r)
+	}
+	return userURLs, nil
+}
+
 func (fs *FileStorage) Ping() error {
 	return nil
 }
 
-func getShortURLFromStorage(fullURL string) string {
+func getShortURLFromStorage(token string, fullURL string) string {
 	file, err := os.OpenFile(storage.path, os.O_RDONLY|os.O_CREATE, 0666)
 	if err != nil {
 		logging.Errorf("storage don't open to read! Error: %s. Path: %s", err, storage.path)
@@ -101,7 +136,7 @@ func getShortURLFromStorage(fullURL string) string {
 			return ""
 		}
 
-		if item.URL == fullURL {
+		if item.URL == fullURL && item.Token == token {
 			return item.ShortURL
 		}
 		s, e = readLine(r)

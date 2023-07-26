@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (m *app) PingHandler(w http.ResponseWriter, r *http.Request) {
+func (m *app) PingHandler(w http.ResponseWriter, _ *http.Request) {
 	err := storage.Ping()
 
 	if err != nil {

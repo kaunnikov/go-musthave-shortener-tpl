@@ -46,5 +46,6 @@ func (m *app) registerRouetes() {
 	m.Get("/{id}", m.ShortHandler)
 	m.Post("/api/shorten", m.JSONHandler)
 	m.Post("/api/shorten/batch", m.BatchHandler)
+	m.Get("/api/user/urls", m.UserURLsHandler)
 	m.Get("/ping", m.PingHandler)
 }

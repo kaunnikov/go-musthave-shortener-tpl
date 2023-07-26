@@ -7,7 +7,13 @@ type DoubleError struct {
 	Err      error
 }
 
-// Error добавляет поддержку интерфейса error для типа LabelError.
+type TokenNotFoundInCookie struct {
+	Err error
+}
+
 func (d *DoubleError) Error() string {
 	return fmt.Sprintf("[%s] %v", d.ShortURL, d.Err)
+}
+func (d *TokenNotFoundInCookie) Error() string {
+	return fmt.Sprintf("%v", d.Err)
 }
