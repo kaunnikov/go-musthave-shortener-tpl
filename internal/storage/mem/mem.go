@@ -43,14 +43,16 @@ func (mem *MemoryStorage) Get(token string, short string) (string, error) {
 	URLStorageSync.Lock()
 	defer URLStorageSync.Unlock()
 
-	URLs, ok := URLMap[token]
-	if !ok {
-		return "", nil
-	}
-	for _, m := range URLs {
-		full, isFind := m[short]
-		if isFind {
-			return full, nil
+	//URLs, ok := URLMap[token]
+	//if !ok {
+	//	return "", nil
+	//}
+	for _, m := range URLMap {
+		for _, u := range m {
+			full, isFind := u[short]
+			if isFind {
+				return full, nil
+			}
 		}
 	}
 
