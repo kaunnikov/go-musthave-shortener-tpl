@@ -41,10 +41,6 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	short, err := storage.SaveURLInStorage(token, t.URL)
-	if err != nil {
-		logging.Errorf("cannot save URL in storage: %s", err)
-		http.Error(w, fmt.Sprintf("cannot save URL in storage: %s", err), http.StatusBadRequest)
-	}
 
 	// Если нашли запись в БД, то отдадим с нужным статусом
 	var doubleErr *errs.DoubleError
@@ -67,6 +63,12 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 			logging.Errorf("cannot write response to the client: %s", err)
 			http.Error(w, "Error in server!", http.StatusBadRequest)
 		}
+		return
+	}
+
+	if err != nil {
+		logging.Errorf("cannot save URL in storage: %s", err)
+		http.Error(w, fmt.Sprintf("cannot save URL in storage: %s", err), http.StatusBadRequest)
 		return
 	}
 

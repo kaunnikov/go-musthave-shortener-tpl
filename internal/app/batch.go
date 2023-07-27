@@ -58,12 +58,12 @@ func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logging.Errorf("cannot encode response: %s", err)
 		http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
+		return
 	}
 
 	_, err = w.Write(resp)
 	if err != nil {
 		logging.Errorf("cannot write response to the client: %s", err)
 		http.Error(w, fmt.Sprintf("cannot write response to the client: %s", err), http.StatusBadRequest)
-
 	}
 }
