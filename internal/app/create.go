@@ -24,8 +24,20 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, _ := auth.GetUserToken(w, r)
+	token, err := auth.GetUserToken(w, r)
+	if err != nil {
+		logging.Errorf("cannot get user token: %s", err)
+		http.Error(w, fmt.Sprintf("cannot get user token: %s", err), http.StatusBadRequest)
+		return
+	}
+
 	short, err := storage.SaveURLInStorage(token, string(responseData))
+	if err != nil {
+		logging.Errorf("cannot save URL in storage: %s", err)
+		http.Error(w, fmt.Sprintf("cannot save URL in storage: %s", err), http.StatusBadRequest)
+		return
+	}
+
 	// Если нашли запись в БД, то отдадим с нужным статусом
 	var doubleErr *errs.DoubleError
 	if errors.As(err, &doubleErr) {

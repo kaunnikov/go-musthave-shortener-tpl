@@ -34,11 +34,11 @@ func NewApp(cfg *config.AppConfig) *app {
 		chi.NewRouter(),
 		cfg,
 	}
-	a.registerRouetes()
+	a.registerRoutes()
 	return a
 }
 
-func (m *app) registerRouetes() {
+func (m *app) registerRoutes() {
 	m.Use(logging.CustomMiddlewareLogger)
 	m.Use(compression.CustomCompression)
 

@@ -33,8 +33,19 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, _ := auth.GetUserToken(w, r)
+	token, err := auth.GetUserToken(w, r)
+	if err != nil {
+		logging.Errorf("cannot get user token: %s", err)
+		http.Error(w, fmt.Sprintf("cannot get user token: %s", err), http.StatusBadRequest)
+		return
+	}
+
 	short, err := storage.SaveURLInStorage(token, t.URL)
+	if err != nil {
+		logging.Errorf("cannot save URL in storage: %s", err)
+		http.Error(w, fmt.Sprintf("cannot save URL in storage: %s", err), http.StatusBadRequest)
+		return
+	}
 
 	// Если нашли запись в БД, то отдадим с нужным статусом
 	var doubleErr *errs.DoubleError
@@ -49,6 +60,7 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			logging.Errorf("cannot encode response: %s", err)
 			http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
+			return
 		}
 
 		_, err = w.Write(resp)
@@ -59,18 +71,13 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err != nil {
-		logging.Errorf("error write data: %s", err)
-		http.Error(w, "Error in server!", http.StatusBadRequest)
-		return
-	}
-
 	resp, err := json.Marshal(shortenResponse{
 		Result: m.cfg.ResultURL + "/" + short,
 	})
 	if err != nil {
 		logging.Errorf("cannot encode response: %s", err)
 		http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
+		return
 	}
 
 	w.Header().Add("Content-Type", "application/json")

@@ -19,12 +19,16 @@ type Claims struct {
 }
 
 func GetUserToken(w http.ResponseWriter, r *http.Request) (string, error) {
+	var tokenCookie *http.Cookie
 	// получаем токен из куки
-	tokenCookie, _ := r.Cookie(CookieTokenName)
+	tokenCookie, _ = r.Cookie(CookieTokenName)
 
 	// Если токена нет - сформируем новый и запишем клиенту в куку
 	if tokenCookie == nil {
-		tokenCookie = generateCookie()
+		tokenCookie, err := generateCookie()
+		if err != nil {
+			return "", fmt.Errorf("don't create token: %s", err)
+		}
 		http.SetCookie(w, tokenCookie)
 	}
 
@@ -43,15 +47,17 @@ func GetUserToken(w http.ResponseWriter, r *http.Request) (string, error) {
 		return "", err
 	}
 
-	// Если кука не валидная - удаляем старую и пробуем снова
+	// Если кука не валидная - удаляем старую, выбрасываем ошибку
 	if !token.Valid {
 		deleteCoolie(w)
-		//GetUserToken(w, r)
+		logging.Errorf("Invalid token in cookie: %s", tokenCookie)
+		return "", fmt.Errorf("invalid token in cookie: %s", tokenCookie)
+
 	}
 
 	if claims.Token == "" {
 		logging.Errorf("Token not found in cookie: %s", tokenCookie)
-		return "", &errs.TokenNotFoundInCookie{
+		return "", &errs.TokenNotFoundInCookieError{
 			Err: fmt.Errorf("token not found in cookie: %s", tokenCookie),
 		}
 	}
@@ -72,17 +78,18 @@ func deleteCoolie(w http.ResponseWriter) {
 	http.SetCookie(w, c)
 }
 
-func generateCookie() *http.Cookie {
+func generateCookie() (*http.Cookie, error) {
 	token, err := generateJWTString()
 	if err != nil {
-		//
+		logging.Errorf("Don't create JWT: %s", err)
+		return nil, err
 	}
 
 	return &http.Cookie{
 		Name:  "token",
 		Value: token,
 		Path:  "/",
-	}
+	}, nil
 }
 
 func generateJWTString() (string, error) {

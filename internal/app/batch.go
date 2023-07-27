@@ -31,8 +31,14 @@ func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := auth.GetUserToken(w, r)
+	if err != nil {
+		logging.Errorf("cannot get user token: %s", err)
+		http.Error(w, fmt.Sprintf("cannot get user token: %s", err), http.StatusBadRequest)
+		return
+	}
+
 	var result []batchResponseMessage
-	token, _ := auth.GetUserToken(w, r)
 	for _, item := range t {
 		short, err := storage.SaveURLInStorage(token, item.URL)
 		if err != nil {

@@ -1,7 +1,6 @@
 package mem
 
 import (
-	"fmt"
 	"kaunnikov/go-musthave-shortener-tpl/internal/config"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage/db"
 	"kaunnikov/go-musthave-shortener-tpl/internal/utils"
@@ -35,7 +34,6 @@ func (mem *MemoryStorage) Save(token string, full string) (string, error) {
 	item[short] = full
 	URLMap[token] = append(URLMap[token], item)
 
-	fmt.Println(URLMap)
 	return short, nil
 }
 

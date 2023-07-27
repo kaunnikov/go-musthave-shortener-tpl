@@ -7,13 +7,13 @@ type DoubleError struct {
 	Err      error
 }
 
-type TokenNotFoundInCookie struct {
+type TokenNotFoundInCookieError struct {
 	Err error
 }
 
 func (d *DoubleError) Error() string {
 	return fmt.Sprintf("[%s] %v", d.ShortURL, d.Err)
 }
-func (d *TokenNotFoundInCookie) Error() string {
+func (d *TokenNotFoundInCookieError) Error() string {
 	return fmt.Sprintf("%v", d.Err)
 }

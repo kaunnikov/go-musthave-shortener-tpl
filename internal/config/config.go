@@ -23,7 +23,7 @@ func LoadConfig() *AppConfig {
 func loadFromArgs(cfg *AppConfig) {
 	flag.StringVar(&cfg.Host, "a", "localhost:8080", "Default Host:port")
 	flag.StringVar(&cfg.ResultURL, "b", "http://localhost:8080", "Default result URL")
-	flag.StringVar(&cfg.FileStoragePath, "f", "", "Default File Storage Path")
+	flag.StringVar(&cfg.FileStoragePath, "f", "/tmp/short-url-db-kaunnikov.json", "Default File Storage Path")
 	flag.StringVar(&cfg.DatabaseDSN, "d", "", "Database DSN")
 	flag.Parse()
 }
