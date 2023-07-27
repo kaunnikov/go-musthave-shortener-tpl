@@ -20,12 +20,13 @@ type Claims struct {
 
 func GetUserToken(w http.ResponseWriter, r *http.Request) (string, error) {
 	var tokenCookie *http.Cookie
+	var err error
 	// получаем токен из куки
 	tokenCookie, _ = r.Cookie(CookieTokenName)
 
 	// Если токена нет - сформируем новый и запишем клиенту в куку
 	if tokenCookie == nil {
-		tokenCookie, err := generateCookie()
+		tokenCookie, err = generateCookie()
 		if err != nil {
 			return "", fmt.Errorf("don't create token: %s", err)
 		}
