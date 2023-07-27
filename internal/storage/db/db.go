@@ -103,6 +103,10 @@ func (db *DataBaseStorage) GetUrlsByUser(token string) ([]UrlsByUserResponseMess
 		items = append(items, u)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return items, nil
 }
 
