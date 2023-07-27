@@ -44,7 +44,6 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logging.Errorf("cannot save URL in storage: %s", err)
 		http.Error(w, fmt.Sprintf("cannot save URL in storage: %s", err), http.StatusBadRequest)
-		return
 	}
 
 	// Если нашли запись в БД, то отдадим с нужным статусом

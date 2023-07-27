@@ -18,6 +18,7 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("cannot read request body: %s", err), http.StatusBadRequest)
 		return
 	}
+
 	if string(responseData) == "" {
 		logging.Errorf("Empty POST request body! %s", r.URL)
 		http.Error(w, "Empty POST request body!", http.StatusBadRequest)
@@ -27,17 +28,11 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.GetUserToken(w, r)
 	if err != nil {
 		logging.Errorf("cannot get user token: %s", err)
-		http.Error(w, fmt.Sprintf("cannot get user token: %s", err), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("cannot get user token: %s", token), http.StatusBadRequest)
 		return
 	}
 
 	short, err := storage.SaveURLInStorage(token, string(responseData))
-	if err != nil {
-		logging.Errorf("cannot save URL in storage: %s", err)
-		http.Error(w, fmt.Sprintf("cannot save URL in storage: %s", err), http.StatusBadRequest)
-		return
-	}
-
 	// Если нашли запись в БД, то отдадим с нужным статусом
 	var doubleErr *errs.DoubleError
 	if errors.As(err, &doubleErr) {
