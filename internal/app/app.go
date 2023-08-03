@@ -47,5 +47,6 @@ func (m *app) registerRoutes() {
 	m.Post("/api/shorten", m.JSONHandler)
 	m.Post("/api/shorten/batch", m.BatchHandler)
 	m.Get("/api/user/urls", m.UserURLsHandler)
+	m.Delete("/api/user/urls", m.UserDeleteURLHandler)
 	m.Get("/ping", m.PingHandler)
 }

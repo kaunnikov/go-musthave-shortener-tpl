@@ -12,6 +12,7 @@ type Storage interface {
 	Save(token string, full string) (string, error)
 	Get(short string) (string, error)
 	GetUrlsByUser(token string) ([]db.UrlsByUserResponseMessage, error)
+	DeleteURLs(string, token string) error
 	Ping() error
 }
 
@@ -47,6 +48,10 @@ func GetFullURL(short string) (string, error) {
 
 func GetURLsByUser(token string) ([]db.UrlsByUserResponseMessage, error) {
 	return defaultStorage.GetUrlsByUser(token)
+}
+
+func DeleteURLs(URL string, token string) error {
+	return defaultStorage.DeleteURLs(URL, token)
 }
 
 func Ping() error {

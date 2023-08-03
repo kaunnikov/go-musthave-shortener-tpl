@@ -76,6 +76,10 @@ func (mem *MemoryStorage) GetUrlsByUser(token string) ([]db.UrlsByUserResponseMe
 
 }
 
+func (mem *MemoryStorage) DeleteURLs(_ string, _ string) error {
+	return nil
+}
+
 func (mem *MemoryStorage) Ping() error {
 	return nil
 }

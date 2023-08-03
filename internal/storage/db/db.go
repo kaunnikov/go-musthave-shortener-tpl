@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	tableName = "url_storage_new"
+	tableName = "url_storage_iter_15"
 	storage   DataBaseStorage
 )
 
@@ -73,14 +73,22 @@ func (db *DataBaseStorage) Save(token string, full string) (string, error) {
 
 func (db *DataBaseStorage) Get(short string) (string, error) {
 	var fullURL string
-	res := storage.connect.QueryRowContext(context.Background(), "SELECT full_url FROM "+tableName+" WHERE short_url = $1;", short)
-	err := res.Scan(&fullURL)
+	var isDeletet bool
+	res := storage.connect.QueryRowContext(context.Background(), "SELECT full_url, is_deleted FROM "+tableName+" WHERE short_url = $1;", short)
+	err := res.Scan(&fullURL, &isDeletet)
 	if err == sql.ErrNoRows {
 		return "", nil
 	}
 	if err != nil {
 		return "", err
 	}
+
+	if isDeletet {
+		return "", &errs.URLIsDeletedError{
+			Err: fmt.Errorf("URL %s is deleted", short),
+		}
+	}
+
 	return fullURL, nil
 }
 
@@ -110,6 +118,16 @@ func (db *DataBaseStorage) GetUrlsByUser(token string) ([]UrlsByUserResponseMess
 	return items, nil
 }
 
+func (db *DataBaseStorage) DeleteURLs(URL string, token string) error {
+	query := "UPDATE " + tableName + " SET is_deleted = true WHERE short_url = $1 AND user_token = $2"
+
+	_, err := storage.connect.ExecContext(context.Background(), query, URL, token)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (db *DataBaseStorage) Ping() error {
 	err := storage.connect.Ping()
 	if err != nil {
@@ -120,7 +138,10 @@ func (db *DataBaseStorage) Ping() error {
 }
 
 func checkTables() error {
-	_, err := storage.connect.ExecContext(context.Background(), "CREATE TABLE IF NOT EXISTS "+tableName+" (user_token varchar(36), short_url varchar(16) not null, full_url varchar(128) not null)")
+	query := "CREATE TABLE IF NOT EXISTS " + tableName + " " +
+		"(user_token varchar(36), short_url varchar(16) not null, full_url varchar(128) not null, is_deleted boolean DEFAULT false)"
+
+	_, err := storage.connect.ExecContext(context.Background(), query)
 	if err != nil {
 		return fmt.Errorf("table "+tableName+" don't created: %w", err)
 	}

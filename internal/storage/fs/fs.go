@@ -115,6 +115,10 @@ func (fs *FileStorage) GetUrlsByUser(token string) ([]db.UrlsByUserResponseMessa
 	return userURLs, nil
 }
 
+func (fs *FileStorage) DeleteURLs(_ string, _ string) error {
+	return nil
+}
+
 func (fs *FileStorage) Ping() error {
 	return nil
 }
