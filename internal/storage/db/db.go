@@ -98,7 +98,9 @@ func (db *DataBaseStorage) GetUrlsByUser(token string) ([]UrlsByUserResponseMess
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		_ = rows.Close()
+	}(rows)
 
 	for rows.Next() {
 		var u UrlsByUserResponseMessage

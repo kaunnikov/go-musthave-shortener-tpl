@@ -27,7 +27,7 @@ func (m *app) UserDeleteURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(body) == 0 {
 		logging.Errorf("Empty request body!")
-		http.Error(w, fmt.Sprintf("Empty request body"), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Empty request body: %s", body), http.StatusBadRequest)
 		return
 	}
 
@@ -42,7 +42,7 @@ func (m *app) UserDeleteURLHandler(w http.ResponseWriter, r *http.Request) {
 
 	if len(URLs) == 1 && URLs[0] == "" {
 		logging.Errorf("Empty request body!")
-		http.Error(w, fmt.Sprintf("Empty request body"), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Empty request body:%s", body), http.StatusBadRequest)
 		return
 	}
 
