@@ -10,12 +10,14 @@ import (
 	"net/http"
 )
 
-func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
+func (m *app) UserDeleteURLHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Header.Get("Content-Type") != "application/json" {
 		logging.Errorf("Invalid Content Type: %s", r.Header.Get("Content-Type"))
 		http.Error(w, "Invalid Content Type!", http.StatusBadRequest)
 		return
 	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logging.Errorf("cannot read request body: %s", err)
@@ -23,11 +25,24 @@ func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var t []batchRequestMessage
-	err = json.Unmarshal(body, &t)
+	if len(body) == 0 {
+		logging.Errorf("Empty request body!")
+		http.Error(w, fmt.Sprintf("Empty request body: %s", body), http.StatusBadRequest)
+		return
+	}
+
+	// Получаем список переданных URL
+	var URLs []string
+	err = json.Unmarshal(body, &URLs)
 	if err != nil {
 		logging.Errorf("cannot decode request body to `JSON`: %s", err)
 		http.Error(w, fmt.Sprintf("cannot decode request body to `JSON`: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	if len(URLs) == 1 && URLs[0] == "" {
+		logging.Errorf("Empty request body!")
+		http.Error(w, fmt.Sprintf("Empty request body:%s", body), http.StatusBadRequest)
 		return
 	}
 
@@ -38,32 +53,31 @@ func (m *app) BatchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var result []batchResponseMessage
-	for _, item := range t {
-		short, err := storage.SaveURLInStorage(token, item.URL)
-		if err != nil {
-			logging.Errorf("error write data: %s", err)
-			http.Error(w, "Error in server!", http.StatusBadRequest)
-			return
-		}
-
-		resItem := batchResponseMessage{item.CorrelationID, m.cfg.ResultURL + "/" + short}
-		result = append(result, resItem)
-	}
+	// Наполняем канал входными данными
+	ch := generator(URLs)
+	deleteURL(ch, token)
 
 	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusAccepted)
+}
 
-	resp, err := json.Marshal(result)
-	if err != nil {
-		logging.Errorf("cannot encode response: %s", err)
-		http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
-		return
-	}
+func generator(input []string) chan string {
+	ch := make(chan string)
+	go func() {
+		defer close(ch)
+		for _, u := range input {
+			ch <- u
+		}
+	}()
 
-	_, err = w.Write(resp)
-	if err != nil {
-		logging.Errorf("cannot write response to the client: %s", err)
-		http.Error(w, fmt.Sprintf("cannot write response to the client: %s", err), http.StatusBadRequest)
+	return ch
+}
+
+func deleteURL(ch <-chan string, token string) {
+	for URL := range ch {
+		err := storage.DeleteURLs(URL, token)
+		if err != nil {
+			logging.Errorf("cannot delete URL %s for user token: %s. Err: ", URL, token, err)
+		}
 	}
 }

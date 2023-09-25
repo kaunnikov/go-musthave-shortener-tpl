@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/internal/auth"
 	"kaunnikov/go-musthave-shortener-tpl/internal/errs"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
@@ -32,7 +33,14 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	short, err := storage.SaveURLInStorage(t.URL)
+	token, err := auth.GetUserToken(w, r)
+	if err != nil {
+		logging.Errorf("cannot get user token: %s", err)
+		http.Error(w, fmt.Sprintf("cannot get user token: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	short, err := storage.SaveURLInStorage(token, t.URL)
 
 	// Если нашли запись в БД, то отдадим с нужным статусом
 	var doubleErr *errs.DoubleError
@@ -47,6 +55,7 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			logging.Errorf("cannot encode response: %s", err)
 			http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
+			return
 		}
 
 		_, err = w.Write(resp)
@@ -58,8 +67,8 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		logging.Errorf("error write data: %s", err)
-		http.Error(w, "Error in server!", http.StatusBadRequest)
+		logging.Errorf("cannot save URL in storage: %s", err)
+		http.Error(w, fmt.Sprintf("cannot save URL in storage: %s", err), http.StatusBadRequest)
 		return
 	}
 
@@ -69,6 +78,7 @@ func (m *app) JSONHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logging.Errorf("cannot encode response: %s", err)
 		http.Error(w, fmt.Sprintf("cannot encode response: %s", err), http.StatusBadRequest)
+		return
 	}
 
 	w.Header().Add("Content-Type", "application/json")

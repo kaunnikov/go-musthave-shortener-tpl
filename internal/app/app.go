@@ -34,11 +34,11 @@ func NewApp(cfg *config.AppConfig) *app {
 		chi.NewRouter(),
 		cfg,
 	}
-	a.registerRouetes()
+	a.registerRoutes()
 	return a
 }
 
-func (m *app) registerRouetes() {
+func (m *app) registerRoutes() {
 	m.Use(logging.CustomMiddlewareLogger)
 	m.Use(compression.CustomCompression)
 
@@ -46,5 +46,7 @@ func (m *app) registerRouetes() {
 	m.Get("/{id}", m.ShortHandler)
 	m.Post("/api/shorten", m.JSONHandler)
 	m.Post("/api/shorten/batch", m.BatchHandler)
+	m.Get("/api/user/urls", m.UserURLsHandler)
+	m.Delete("/api/user/urls", m.UserDeleteURLHandler)
 	m.Get("/ping", m.PingHandler)
 }

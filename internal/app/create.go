@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"kaunnikov/go-musthave-shortener-tpl/internal/auth"
 	"kaunnikov/go-musthave-shortener-tpl/internal/errs"
 	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"kaunnikov/go-musthave-shortener-tpl/internal/storage"
@@ -17,13 +18,21 @@ func (m *app) CreateHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("cannot read request body: %s", err), http.StatusBadRequest)
 		return
 	}
+
 	if string(responseData) == "" {
 		logging.Errorf("Empty POST request body! %s", r.URL)
 		http.Error(w, "Empty POST request body!", http.StatusBadRequest)
 		return
 	}
 
-	short, err := storage.SaveURLInStorage(string(responseData))
+	token, err := auth.GetUserToken(w, r)
+	if err != nil {
+		logging.Errorf("cannot get user token: %s", err)
+		http.Error(w, fmt.Sprintf("cannot get user token: %s", token), http.StatusBadRequest)
+		return
+	}
+
+	short, err := storage.SaveURLInStorage(token, string(responseData))
 	// Если нашли запись в БД, то отдадим с нужным статусом
 	var doubleErr *errs.DoubleError
 	if errors.As(err, &doubleErr) {
