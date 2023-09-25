@@ -2,12 +2,14 @@ package auth
 
 import (
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
-	"kaunnikov/go-musthave-shortener-tpl/internal/errs"
-	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 	"net/http"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+
+	"kaunnikov/go-musthave-shortener-tpl/internal/errs"
+	"kaunnikov/go-musthave-shortener-tpl/internal/logging"
 )
 
 const SecretKey = "UZo57ez$4e2V"
